@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, SwapMatch, StickerStatus } from '../types';
 import { MOCK_COLLECTORS, ALL_STICKERS } from '../data';
 import { Heart, X, Sparkles, MapPin, Star, Shield, ArrowUpRight, MessageCircle } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface MatchEngineProps {
   currentUser: UserProfile;
@@ -21,6 +22,8 @@ export default function MatchEngine({
   const [deck, setDeck] = useState<SwapMatch[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showMatchModal, setShowMatchModal] = useState<SwapMatch | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
 
   // Recalculate sticker overlap and compatibility dynamically based on current user's state!
   useEffect(() => {
@@ -66,23 +69,29 @@ export default function MatchEngine({
   }, [stickerStates, currentUser.city, activeMatches]);
 
   const handleSwipe = (liked: boolean) => {
-    if (deck.length === 0 || currentIndex >= deck.length) return;
+    if (deck.length === 0 || currentIndex >= deck.length || swipeDirection) return;
+
+    setSwipeDirection(liked ? 'right' : 'left');
 
     const currentCard = deck[currentIndex];
-    if (liked) {
-      // 90% chance of a match in this gamified simulation so they can exchange sticker messages immediately
-      const isMatch = Math.random() < 0.9;
-      if (isMatch) {
-         const matchedCard: SwapMatch = {
-           ...currentCard,
-           status: 'matched'
-         };
-         setActiveMatches(prev => [matchedCard, ...prev]);
-         setShowMatchModal(matchedCard);
+    setTimeout(() => {
+      if (liked) {
+        // 90% chance of a match in this gamified simulation so they can exchange sticker messages immediately
+        const isMatch = Math.random() < 0.9;
+        if (isMatch) {
+           const matchedCard: SwapMatch = {
+             ...currentCard,
+             status: 'matched'
+           };
+           setActiveMatches(prev => [matchedCard, ...prev]);
+           setShowMatchModal(matchedCard);
+        }
       }
-    }
-    setCurrentIndex(prev => prev + 1);
+      setCurrentIndex(prev => prev + 1);
+      setSwipeDirection(null);
+    }, 350);
   };
+
 
   const startChattingFromModal = () => {
     if (showMatchModal) {
@@ -110,7 +119,18 @@ export default function MatchEngine({
       {hasCards ? (
         <div className="relative" id="active-swipe-deck">
           {/* Main Swiping Card */}
-          <div className="bg-neutral-900 border border-neutral-700 rounded-3xl p-5 shadow-2xl flex flex-col justify-between min-h-[400px] relative overflow-hidden transition-all duration-300">
+          <motion.div
+            key={currentIndex}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              x: swipeDirection === 'left' ? -350 : swipeDirection === 'right' ? 350 : 0,
+              rotate: swipeDirection === 'left' ? -15 : swipeDirection === 'right' ? 15 : 0
+            }}
+            transition={{ duration: swipeDirection ? 0.35 : 0.2, ease: "easeOut" }}
+            className="bg-neutral-900 border border-neutral-700 rounded-3xl p-5 shadow-2xl flex flex-col justify-between min-h-[400px] relative overflow-hidden"
+          >
             {/* Compatibility Badge floating */}
             <div className="absolute top-4 right-4 bg-gradient-to-r from-emerald-500 to-teal-400 text-neutral-950 px-3 py-1 rounded-full text-[11px] font-black tracking-wide shadow-md flex items-center gap-1">
               <Sparkles className="h-3 w-3 fill-neutral-950 animate-pulse" />
@@ -206,7 +226,8 @@ export default function MatchEngine({
                 <Heart className="h-7 w-7 fill-neutral-950 stroke-[2px]" />
               </button>
             </div>
-          </div>
+          </motion.div>
+
         </div>
       ) : (
         <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center space-y-3 shadow-lg">
@@ -224,8 +245,18 @@ export default function MatchEngine({
 
       {/* MATCH REWARD MODAL OVERLAY */}
       {showMatchModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-md p-4 animate-fade-in" id="match-celebration-popup">
-          <div className="bg-neutral-900 border-2 border-emerald-400 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-[0_0_30px_rgba(52,211,153,0.3)] select-none">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-md p-4" 
+          id="match-celebration-popup"
+        >
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="bg-neutral-900 border-2 border-emerald-400 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-[0_0_30px_rgba(52,211,153,0.3)] select-none"
+          >
             <div className="relative inline-block">
               {/* Pulsing effects */}
               <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full blur-sm opacity-75 animate-pulse" />
@@ -271,6 +302,7 @@ export default function MatchEngine({
               </div>
             </div>
 
+
             <div className="flex flex-col gap-2 pt-2">
               <button
                 onClick={startChattingFromModal}
@@ -286,9 +318,10 @@ export default function MatchEngine({
                 Seguir buscando coincidenias
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+
     </div>
   );
 }

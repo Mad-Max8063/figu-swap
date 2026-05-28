@@ -6,7 +6,7 @@ import SafeZonesMap from './components/SafeZonesMap';
 import ChatRoomView from './components/ChatRoomView';
 import { MOCK_COLLECTORS } from './data';
 import { UserProfile, StickerStatus, SwapMatch, ChatRoom, ChatMessage, CityLocation, Sticker } from './types';
-import { Shield, Sparkles, MessageSquare, Award, Star, RefreshCw, Key, LogOut } from 'lucide-react';
+import { Shield, Sparkles, MessageSquare, Award, Star, RefreshCw, Key, LogOut, Lock } from 'lucide-react';
 import { 
   auth, 
   db, 
@@ -84,6 +84,11 @@ export default function App() {
   const [activeMatches, setActiveMatches] = useState<SwapMatch[]>([]);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [openedRoomId, setOpenedRoomId] = useState<string | null>(null);
+
+  // Lockscreen states for unverified minors
+  const [lockscreenPin, setLockscreenPin] = useState('');
+  const [lockscreenError, setLockscreenError] = useState(false);
+
 
   // Seeding helper to pre-fill active profiles, sticker vectors & chat history instantly
   const seedUserCollections = async (uid: string, email: string, displayName: string, photoURL?: string | null) => {
@@ -605,6 +610,20 @@ export default function App() {
     }
   };
 
+  const handleUpdateTutorInfo = async (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => {
+    if (!isAuthenticated || !auth.currentUser) return;
+    try {
+      const updates: any = { isMinor, tutorEmail };
+      if (tutorVerified !== undefined) {
+        updates.tutorVerified = tutorVerified;
+      }
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), updates);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
+    }
+  };
+
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center space-y-4">
@@ -682,42 +701,115 @@ export default function App() {
     );
   }
 
+  const renderMinorBlockedScreen = () => {
+    return (
+      <div className="bg-neutral-900 border border-amber-500/25 rounded-3xl p-6 text-center space-y-5 shadow-xl max-w-sm mx-auto animate-fade-in" id="minor-safety-lockscreen">
+        <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto border border-amber-500/25 text-amber-400">
+          <Lock className="h-6 w-6 animate-pulse" />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-wide">Acceso Restringido por Seguridad</h3>
+          <p className="text-[11px] text-neutral-400 leading-relaxed">
+            Como menor de edad, requerís la validación activa de tu adulto responsable. Las interacciones sociales (Matcher y Chats) están suspendidas hasta verificar tu tutor.
+          </p>
+        </div>
+        <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3">
+          <span className="text-[9px] text-amber-400 font-bold uppercase block tracking-wider">Ingresar PIN del Tutor</span>
+          <p className="text-[9px] text-neutral-500 leading-normal">
+            Pedile a tu tutor el PIN de 4 dígitos enviado a su correo <b className="text-neutral-350">{currentUser?.tutorEmail || 'sin correo registrado'}</b> e ingresalo abajo:
+          </p>
+          <div className="flex gap-1.5 justify-center items-center">
+            <input
+              type="text"
+              maxLength={4}
+              placeholder="PIN"
+              value={lockscreenPin}
+              onChange={(e) => setLockscreenPin(e.target.value.replace(/\D/g, ''))}
+              className="bg-neutral-900 border border-neutral-800 rounded-lg py-1 px-2.5 text-center font-bold tracking-widest text-xs outline-none w-20 text-neutral-200 focus:border-amber-500/40"
+            />
+            <button
+              onClick={() => {
+                if (lockscreenPin === '1234') {
+                  setLockscreenError(false);
+                  handleUpdateTutorInfo(true, currentUser?.tutorEmail || '', true);
+                } else {
+                  setLockscreenError(true);
+                }
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-neutral-950 px-3.5 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
+            >
+              Validar
+            </button>
+          </div>
+          {lockscreenError && (
+            <span className="text-[9px] text-rose-450 block font-semibold">PIN incorrecto. Intenta con "1234".</span>
+          )}
+          <p className="text-[8px] text-neutral-500 italic">Podés cambiar el correo de tutor desde la pestaña "Mi Perfil".</p>
+        </div>
+      </div>
+    );
+  };
+
   const openedRoom = chatRooms.find(r => r.id === openedRoomId);
+
+  // Dinamically calculated progress metrics for global header
+  const totalStickers = 994;
+  const ownedCount = Object.values(stickerStates).filter(status => status === 'tengo' || status === 'repetida').length;
+  const percentComplete = Math.min(100, Math.round((ownedCount / totalStickers) * 100)) || 0;
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col antialiased font-sans" id="application-body-wrapper">
       {/* Top Banner Branding Header */}
-      <header className="sticky top-0 bg-neutral-900/90 border-b border-neutral-800/80 backdrop-blur-md z-40 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 py-3 shrink-0 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="p-1 px-1.5 bg-emerald-500 rounded-lg text-neutral-900 font-black tracking-tighter text-sm flex items-center gap-0.5 shadow-md">
-            <span>F</span><span className="text-neutral-900 text-xs">S</span>
+      <header className="sticky top-0 bg-neutral-900/90 border-b border-neutral-800/80 backdrop-blur-md z-40 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 py-3 shrink-0 flex flex-col gap-2 shadow-md">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <div className="p-1 px-1.5 bg-emerald-500 rounded-lg text-neutral-900 font-black tracking-tighter text-sm flex items-center gap-0.5 shadow-md">
+              <span>F</span><span className="text-neutral-900 text-xs">S</span>
+            </div>
+            <div>
+              <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguSwap</span>
+              <span className="text-[9px] text-emerald-400 tracking-wider font-mono uppercase block">Argentina 🇦🇷</span>
+            </div>
           </div>
-          <div>
-            <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguSwap</span>
-            <span className="text-[9px] text-emerald-400 tracking-wider font-mono uppercase block">Argentina 🇦🇷</span>
+
+          {/* Dynamic Global Album Progress Badge */}
+          <div className="flex items-center gap-2 bg-neutral-950/85 px-3 py-1.5 border border-neutral-800 rounded-full text-[10px] font-bold">
+            <span className="text-neutral-400 font-mono">Progreso:</span>
+            <span className="text-emerald-400 font-mono">{ownedCount} / {totalStickers} ({percentComplete}%)</span>
+          </div>
+
+          {/* User Auth display states & logout action */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 border border-neutral-800 px-2.5 py-1 rounded-full text-[9px] font-bold text-neutral-300 bg-neutral-950/40">
+              <img src={currentUser.photoURL} alt="Yo" className="h-3.5 w-3.5 rounded-full object-cover" />
+              <span className="hidden sm:inline">{currentUser.displayName.split(' ')[0]}</span>
+            </div>
+
+            <button
+              onClick={handleSignOut}
+              className="p-1.5 hover:bg-neutral-850 border border-neutral-800 text-rose-450 hover:text-rose-350 rounded-xl transition-colors cursor-pointer"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
-        {/* User Auth display states & logout action */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 border border-neutral-800 px-2.5 py-1 rounded-full text-[9px] font-bold text-neutral-300 bg-neutral-950/40">
-            <img src={currentUser.photoURL} alt="Yo" className="h-3.5 w-3.5 rounded-full object-cover" />
-            <span className="hidden sm:inline">{currentUser.displayName.split(' ')[0]}</span>
-          </div>
-
-          <button
-            onClick={handleSignOut}
-            className="p-1.5 hover:bg-neutral-850 border border-neutral-800 text-rose-450 hover:text-rose-350 rounded-xl transition-colors cursor-pointer"
-            title="Cerrar sesión"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
+        {/* Global Progress Line Bar at Header Bottom */}
+        <div className="w-full h-1 bg-neutral-950 rounded-full overflow-hidden border border-neutral-850">
+          <div 
+            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 transition-all duration-500 rounded-full" 
+            style={{ width: `${percentComplete}%` }} 
+          />
         </div>
       </header>
 
+
       {/* Main Core Router Panels */}
       <main className="flex-1 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 pt-3 pb-24 overflow-y-auto overflow-x-hidden">
-        {openedRoomId && activeTab === 'chats' && openedRoom ? (
+        {currentUser.isMinor && !currentUser.tutorVerified && (activeTab === 'swap' || activeTab === 'chats') ? (
+          renderMinorBlockedScreen()
+        ) : openedRoomId && activeTab === 'chats' && openedRoom ? (
           <ChatRoomView
             room={openedRoom}
             currentUser={currentUser}
@@ -728,6 +820,7 @@ export default function App() {
             onAddReviewToUser={handleAddReviewToUser}
           />
         ) : (
+
           <div className="animate-fade-in space-y-4">
             {activeTab === 'inventory' && (
               <InventoryView
@@ -825,6 +918,7 @@ export default function App() {
                 handleUpdateBio={handleUpdateBio}
                 handleUpdateName={handleUpdateName}
                 handleTogglePrivateMode={handleTogglePrivateMode}
+                handleUpdateTutorInfo={handleUpdateTutorInfo}
               />
             )}
           </div>
@@ -862,14 +956,17 @@ function InventoryViewPropsWrapper({
   handleChangeUserCity, 
   handleUpdateBio, 
   handleUpdateName,
-  handleTogglePrivateMode
+  handleTogglePrivateMode,
+  handleUpdateTutorInfo
 }: { 
   currentUser: UserProfile; 
   handleChangeUserCity: (city: CityLocation) => void;
   handleUpdateBio: (bio: string) => void;
   handleUpdateName: (name: string) => void;
   handleTogglePrivateMode: (enabled: boolean) => void;
+  handleUpdateTutorInfo: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
 }) {
+
   return (
     <UserProfileView
       user={currentUser}
@@ -877,6 +974,7 @@ function InventoryViewPropsWrapper({
       onUpdateBio={handleUpdateBio}
       onUpdateName={handleUpdateName}
       onTogglePrivateMode={handleTogglePrivateMode}
+      onUpdateTutorInfo={handleUpdateTutorInfo}
     />
   );
 }

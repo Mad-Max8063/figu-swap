@@ -34,7 +34,10 @@ service cloud.firestore {
         && data.reputation is number && data.reputation >= 1.0 && data.reputation <= 5.0
         && data.verified is bool
         && data.bio is string && data.bio.size() <= 1000
-        && data.reviewsCount is number && data.reviewsCount >= 0;
+        && data.reviewsCount is number && data.reviewsCount >= 0
+        && (!('isMinor' in data) || data.isMinor is bool)
+        && (!('tutorEmail' in data) || data.tutorEmail is string)
+        && (!('tutorVerified' in data) || data.tutorVerified is bool);
     }
 
     function isValidStickerState(data) {
@@ -84,7 +87,7 @@ service cloud.firestore {
         request.resource.data.reputation == resource.data.reputation &&
         request.resource.data.email == resource.data.email &&
         request.resource.data.uid == resource.data.uid
-      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts']);
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isMinor', 'tutorEmail', 'tutorVerified']);
       allow delete: if false; // Profiles are immortal
     }
 

@@ -38,6 +38,14 @@ export default function ChatRoomView({
   const [ratingComment, setRatingComment] = useState('');
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
+  // Tutor Security States
+  const [tutorAlertSent, setTutorAlertSent] = useState(false);
+  const [tutorAlertLoading, setTutorAlertLoading] = useState(false);
+  const [confirmedAdultPresence, setConfirmedAdultPresence] = useState(false);
+  const [isTutorAuthorized, setIsTutorAuthorized] = useState(false);
+  const [tutorPinError, setTutorPinError] = useState(false);
+
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -185,6 +193,52 @@ export default function ChatRoomView({
         <span>Punto de encuentro seguro: Parque Centenario / Wöllen Córdoba activo ✔️</span>
       </div>
 
+      {/* Tutor Supervision Warning Banner */}
+      {(currentUser.isMinor || room.otherUser.isMinor) && (
+        <div className="bg-rose-500/10 border-b border-rose-500/25 px-4 py-2.5 text-[10px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0 animate-pulse">
+          <div className="flex items-start gap-2 text-rose-300 font-semibold leading-relaxed">
+            <AlertTriangle className="h-4.5 w-4.5 text-rose-500 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <span className="uppercase tracking-wider block text-[9px] font-bold text-rose-450">Intercambio Supervisado Obligatorio</span>
+              <p className="text-[9px] text-neutral-300 mt-0.5 leading-normal">
+                {currentUser.isMinor 
+                  ? 'Eres menor de edad. Para tu protección, debes ir acompañado de tu tutor. Pídele el PIN de autorización para validar el canje.' 
+                  : `¡ATENCIÓN! ${room.otherUser.displayName} es menor de edad. Por políticas de seguridad, ambos deben asistir obligatoriamente acompañados por sus tutores.`}
+              </p>
+            </div>
+          </div>
+          {currentUser.isMinor && currentUser.tutorEmail && (
+            <div className="shrink-0">
+              {tutorAlertSent ? (
+                <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-[9px] font-bold uppercase tracking-wider block text-center">
+                  📧 ¡Alerta Enviada! PIN: 9876
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTutorAlertLoading(true);
+                    setTimeout(() => {
+                      setTutorAlertLoading(false);
+                      setTutorAlertSent(true);
+                    }, 1200);
+                  }}
+                  disabled={tutorAlertLoading}
+                  className="px-2.5 py-1 bg-rose-500 hover:bg-rose-600 disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-950 text-[9px] font-bold rounded-lg flex items-center justify-center gap-1 w-full transition-colors cursor-pointer"
+                >
+                  {tutorAlertLoading ? (
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <span>Notificar a mi Tutor</span>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+
       {/* Main Container: Message Log VS QR Validator Overlay */}
       <div className="flex-1 overflow-hidden relative">
         {showQrValidator ? (
@@ -270,13 +324,67 @@ export default function ChatRoomView({
                       <span className="text-[8px] text-neutral-400 block">Inventarios sincronizados</span>
                     </div>
                   ) : (
-                    <button
-                      onClick={simulateScanning}
-                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-black text-xs rounded-xl"
-                    >
-                      ¡Simular Escaneo Físico QR!
-                    </button>
+                    <div className="w-full space-y-2.5">
+                      {currentUser.isMinor && !isTutorAuthorized && (
+                        <div className="space-y-1.5 p-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-left">
+                          <span className="text-[9px] text-amber-400 font-bold block uppercase tracking-wider">Ingresá el PIN de Autorización del Tutor</span>
+                          <p className="text-[8px] text-neutral-400 leading-normal">
+                            Tu tutor debe autorizar este encuentro. Pídele el PIN de autorización de 4 dígitos enviado a su correo e ingresalo abajo para habilitar la validación física:
+                          </p>
+                          <div className="flex gap-1.5 justify-center mt-1">
+                            <input
+                              type="text"
+                              maxLength={4}
+                              placeholder="PIN"
+                              id="tutor-auth-meetup-pin-input"
+                              className="bg-neutral-950 border border-neutral-800 rounded px-2.5 py-1 text-center font-bold tracking-widest text-[10px] outline-none w-20 text-neutral-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const input = document.getElementById('tutor-auth-meetup-pin-input') as HTMLInputElement;
+                                if (input && input.value === '9876') {
+                                  setIsTutorAuthorized(true);
+                                  setTutorPinError(false);
+                                } else {
+                                  setTutorPinError(true);
+                                }
+                              }}
+                              className="bg-amber-500 hover:bg-amber-600 text-neutral-950 px-3 py-1 rounded text-[10px] font-bold cursor-pointer"
+                            >
+                              Autorizar
+                            </button>
+                          </div>
+                          {tutorPinError && (
+                            <span className="text-[8px] text-rose-450 block font-semibold text-center mt-0.5 animate-pulse">PIN incorrecto. Notifica al tutor arriba para ver el código "9876".</span>
+                          )}
+                        </div>
+                      )}
+
+                      {(currentUser.isMinor || room.otherUser.isMinor) && (
+                        <label className="flex items-start gap-2 text-left p-2.5 bg-neutral-900 border border-neutral-800 rounded-lg text-[9px] text-neutral-350 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={confirmedAdultPresence}
+                            onChange={(e) => setConfirmedAdultPresence(e.target.checked)}
+                            className="rounded border-neutral-800 text-emerald-500 bg-neutral-950 h-3.5 w-3.5 mt-0.5"
+                          />
+                          <span>Confirmo que nos encontramos en un punto público supervisado y estoy acompañado por mi tutor responsable / adulto a cargo.</span>
+                        </label>
+                      )}
+                      <button
+                        onClick={simulateScanning}
+                        disabled={
+                          ((currentUser.isMinor || room.otherUser.isMinor) && !confirmedAdultPresence) ||
+                          (currentUser.isMinor && !isTutorAuthorized)
+                        }
+                        className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-950 font-black text-xs rounded-xl cursor-pointer"
+                      >
+                        ¡Simular Escaneo Físico QR!
+                      </button>
+                    </div>
                   )}
+
                   <span className="text-[8px] text-neutral-500">Apunta con tu cámara</span>
                 </div>
               </div>

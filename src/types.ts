@@ -36,6 +36,9 @@ export interface UserProfile {
     repetida: number;
   };
   privateMode?: boolean;
+  isMinor?: boolean;
+  tutorEmail?: string;
+  tutorVerified?: boolean;
 }
 
 export interface CompactStickerState {

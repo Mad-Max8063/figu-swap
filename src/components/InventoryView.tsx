@@ -4,6 +4,8 @@ import { CompactStickerState, Sticker, StickerStatus } from '../types';
 import { Search, Layers, CheckCircle2, AlertCircle, PlusCircle, Sparkles, SlidersHorizontal, Lock, FileText } from 'lucide-react';
 import ScannerMock from './ScannerMock';
 import PlanillaScanner from './PlanillaScanner';
+import { motion } from 'motion/react';
+
 
 interface InventoryViewProps {
   stickerStates: Record<string, StickerStatus>;
@@ -150,6 +152,22 @@ export default function InventoryView({
         </div>
       )}
 
+      {/* Real-time Global Progress Bar */}
+      <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl shadow-md space-y-2">
+        <div className="flex items-center justify-between text-xs font-bold">
+          <span className="text-neutral-300 uppercase tracking-wider">Mi Álbum FiguSwap</span>
+          <span className="text-emerald-400 font-mono">
+            {ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length} / {ALL_STICKERS.length} pegadas ({Math.round((ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length / ALL_STICKERS.length) * 100) || 0}%)
+          </span>
+        </div>
+        <div className="h-2.5 w-full bg-neutral-950 rounded-full overflow-hidden border border-neutral-850">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-700"
+            style={{ width: `${Math.round((ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length / ALL_STICKERS.length) * 100) || 0}%` }}
+          />
+        </div>
+      </div>
+
       {/* Search and Status Filters */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 space-y-3 shadow-md">
         <div className="relative flex items-center bg-neutral-950 border border-neutral-800 focus-within:border-emerald-500/60 rounded-lg overflow-hidden px-3">
@@ -205,19 +223,56 @@ export default function InventoryView({
             Secciones del Álbum:
           </span>
           <div className="flex gap-1.5 overflow-x-auto pb-1.5 mask-right" id="team-scroll-tab">
-            {TEAMS.map((team) => (
-              <button
-                key={team.id}
-                onClick={() => setActiveTeamId(team.id)}
-                className={`flex-none px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-                  activeTeamId === team.id
-                    ? 'bg-emerald-500 text-neutral-950 font-bold shadow-md'
-                    : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
-                }`}
-              >
-                {team.name}
-              </button>
-            ))}
+            {TEAMS.map((team) => {
+              const teamStickers = ALL_STICKERS.filter(s => s.id.startsWith(`${team.prefix}-`));
+              const teamOwned = teamStickers.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length;
+              const teamPercent = Math.round((teamOwned / team.size) * 100) || 0;
+              return (
+                <button
+                  key={team.id}
+                  onClick={() => setActiveTeamId(team.id)}
+                  className={`flex-none px-3 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 ${
+                    activeTeamId === team.id
+                      ? 'bg-emerald-500 text-neutral-950 font-bold shadow-md'
+                      : 'bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <span>{team.name}</span>
+                  {/* Circular progress SVG */}
+                  <div className="relative flex items-center justify-center h-5 w-5 shrink-0">
+                    <svg className="w-5 h-5 -rotate-90">
+                      {/* Background circle */}
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        stroke={activeTeamId === team.id ? "rgba(10,10,10,0.15)" : "#262626"}
+                        strokeWidth="2"
+                        fill="transparent"
+                      />
+                      {/* Active stroke */}
+                      <circle
+                        cx="10"
+                        cy="10"
+                        r="8"
+                        stroke={activeTeamId === team.id ? "#0a0a0a" : "#10b981"}
+                        strokeWidth="2"
+                        fill="transparent"
+                        strokeDasharray={2 * Math.PI * 8}
+                        strokeDashoffset={2 * Math.PI * 8 * (1 - teamPercent / 100)}
+                        className="transition-all duration-500"
+                      />
+                    </svg>
+                    <span className={`absolute text-[7px] font-bold font-mono ${
+                      activeTeamId === team.id ? 'text-neutral-950' : 'text-neutral-200'
+                    }`}>
+                      {teamPercent}
+                    </span>
+                  </div>
+
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -230,14 +285,16 @@ export default function InventoryView({
           </span>
           <span className="text-[9px] text-neutral-400">Total: 994 canjeables</span>
         </div>
-
-        {filteredStickers.length > 0 ? (
+{filteredStickers.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" id="stickers-cards-grid">
             {filteredStickers.map((sticker) => {
               const currentStatus = stickerStates[sticker.id] || 'none';
               return (
-                <div
+                <motion.div
                   key={sticker.id}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.15 }}
                   className={`border rounded-xl p-3 transition-all flex flex-col justify-between space-y-2 bg-gradient-to-br ${getStatusColor(
                     currentStatus
                   )}`}
@@ -310,7 +367,7 @@ export default function InventoryView({
                       Repetida
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -324,3 +381,4 @@ export default function InventoryView({
     </div>
   );
 }
+

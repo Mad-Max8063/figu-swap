@@ -8,23 +8,45 @@ interface UserProfileViewProps {
   onUpdateBio: (bio: string) => void;
   onUpdateName: (name: string) => void;
   onTogglePrivateMode: (enabled: boolean) => void;
+  onUpdateTutorInfo?: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
 }
 
-export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, onUpdateName, onTogglePrivateMode }: UserProfileViewProps) {
+export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, onUpdateName, onTogglePrivateMode, onUpdateTutorInfo }: UserProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.displayName);
   const [editedBio, setEditedBio] = useState(user.bio);
   const [editedCity, setEditedCity] = useState<CityLocation>(user.city);
+  const [isMinor, setIsMinor] = useState(user.isMinor || false);
+  const [tutorEmail, setTutorEmail] = useState(user.tutorEmail || '');
+
+  // PIN states for tutor authentication
+  const [pinInput, setPinInput] = useState('');
+  const [showPinError, setShowPinError] = useState(false);
+
+  const verifyTutorPin = () => {
+    if (pinInput === '1234') {
+      setShowPinError(false);
+      if (onUpdateTutorInfo) {
+        onUpdateTutorInfo(true, user.tutorEmail || tutorEmail, true);
+      }
+    } else {
+      setShowPinError(true);
+    }
+  };
 
   const saveProfile = () => {
     onUpdateName(editedName);
     onUpdateBio(editedBio);
     onChangeUserCity(editedCity);
+    if (onUpdateTutorInfo) {
+      onUpdateTutorInfo(isMinor, tutorEmail, isMinor ? user.tutorVerified : false);
+    }
     setIsEditing(false);
   };
 
   const totalStickers = 994; // 980 standard + 14 specials
   const percentComplete = Math.min(100, Math.round((user.stickerCounts.tengo / totalStickers) * 100));
+
 
   return (
     <div className="space-y-4" id="user-profile-view">
@@ -80,6 +102,52 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
           <span className="text-[10px] text-neutral-400">({user.reviewsCount} canjes)</span>
         </div>
 
+        {/* Tutor Verification Status */}
+        {user.isMinor && (
+          <div className="mt-3 w-full max-w-xs">
+            {user.tutorVerified ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 py-1.5 px-3 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-[inset_0_0_8px_rgba(16,185,129,0.06)] animate-fade-in">
+                <Shield className="h-3.5 w-3.5" />
+                <span>TUTOR VERIFICADO: {user.tutorEmail}</span>
+              </div>
+            ) : (
+              <div className="bg-amber-550/5 border border-amber-500/25 text-amber-300 py-2.5 px-3 rounded-xl text-[10px] space-y-2 animate-pulse shadow-md">
+                <div className="font-bold flex items-center justify-center gap-1">
+                  <Lock className="h-3.5 w-3.5 text-amber-500 animate-bounce" />
+                  <span>TUTOR PENDIENTE: {user.tutorEmail || 'Sin correo registrado'}</span>
+                </div>
+                {user.tutorEmail ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] text-neutral-400 leading-snug">Ingresá el PIN de 4 dígitos enviado a tu tutor para habilitar la app.</p>
+                    <div className="flex gap-1.5 justify-center">
+                      <input
+                        type="text"
+                        maxLength={4}
+                        placeholder="PIN"
+                        value={pinInput}
+                        onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                        className="bg-neutral-950 border border-neutral-800 rounded px-2.5 py-1 text-center font-bold tracking-widest text-[11px] outline-none w-20 text-neutral-200 focus:border-amber-500/40"
+                      />
+                      <button
+                        onClick={verifyTutorPin}
+                        className="bg-amber-500 hover:bg-amber-600 text-neutral-950 px-3 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
+                      >
+                        Validar
+                      </button>
+                    </div>
+                    {showPinError && (
+                      <span className="text-[9px] text-rose-450 block font-semibold">PIN incorrecto. Intenta con "1234".</span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[9px] text-neutral-500 leading-snug">Marcá tu perfil como editable arriba y colocá el correo de tu tutor.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+
         {/* Bio */}
         <p className="text-xs text-neutral-300 mt-3.5 max-w-sm leading-relaxed italic">
           "{user.bio}"
@@ -121,6 +189,33 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
               />
             </div>
 
+            {/* Control de Menores (Tutor) */}
+            <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-850 space-y-2.5">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-300">
+                <input
+                  type="checkbox"
+                  checked={isMinor}
+                  onChange={(e) => setIsMinor(e.target.checked)}
+                  className="rounded border-neutral-800 text-emerald-500 focus:ring-emerald-500 bg-neutral-900 h-4 w-4"
+                />
+                <span>Soy menor de edad (requiere tutor) 🛡️</span>
+              </label>
+
+              {isMinor && (
+                <div className="animate-fade-in space-y-1">
+                  <label className="block text-[9px] text-neutral-400 font-bold uppercase">Email de mi Adulto Responsable (Tutor)</label>
+                  <input
+                    type="email"
+                    placeholder="ej: tutor.mama.papa@gmail.com"
+                    value={tutorEmail}
+                    onChange={(e) => setTutorEmail(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 focus:border-emerald-500 rounded-lg p-2 text-xs text-neutral-200 outline-none"
+                  />
+                  <span className="text-[8px] text-neutral-500 block leading-snug">Se le enviará un código temporal de autorización para validar su cuenta.</span>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] text-neutral-400 font-bold mb-1 uppercase">Provincia/Ciudad</label>
@@ -137,7 +232,7 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
               <div className="flex items-end">
                 <button
                   onClick={saveProfile}
-                  className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs rounded-lg transition-colors"
+                  className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                 >
                   Guardar Cambios
                 </button>

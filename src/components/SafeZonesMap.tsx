@@ -110,19 +110,37 @@ export default function SafeZonesMap() {
         </div>
 
         {/* Floating location status bar */}
-        <div className="z-10 bg-neutral-900/95 border border-neutral-800 backdrop-blur-sm p-3 rounded-xl flex items-center gap-3 w-full self-end shadow-md">
-          <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-            <Navigation className="h-4 w-4 rotate-45" />
+        <div className="z-10 bg-neutral-900/95 border border-neutral-800 backdrop-blur-sm p-3 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3 w-full self-end shadow-md">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 shrink-0">
+              <Navigation className="h-4 w-4 rotate-45 animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-neutral-100 truncate">{selectedZone.name}</h4>
+              <p className="text-[10px] text-neutral-400 truncate">{selectedZone.address}</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-xs font-bold text-neutral-100 truncate">{selectedZone.name}</h4>
-            <p className="text-[10px] text-neutral-400 truncate">{selectedZone.address}</p>
-          </div>
-          <div className="text-right shrink-0">
-            <span className="inline-block text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-              Activo ✓
-            </span>
-            <span className="block text-[8px] text-neutral-400 mt-0.5">Geocerca 100m</span>
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-800 w-full sm:w-auto">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedZone.name + ' ' + selectedZone.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow transition-transform active:scale-95 text-center cursor-pointer"
+            >
+              <span>Google Maps 🗺️</span>
+            </a>
+            <a
+              href={`maps://?q=${encodeURIComponent(selectedZone.name + ' ' + selectedZone.address)}`}
+              className="px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-750 text-neutral-250 border border-neutral-700 text-[10px] font-bold rounded-lg flex items-center gap-1 shadow transition-transform active:scale-95 text-center cursor-pointer"
+            >
+              <span>Apple Maps 🍎</span>
+            </a>
+
+            <div className="text-right shrink-0">
+              <span className="inline-block text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                Activo ✓
+              </span>
+            </div>
           </div>
         </div>
       </div>
