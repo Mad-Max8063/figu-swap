@@ -1,0 +1,12 @@
+{
+  "name": "FiguSwap Argentina",
+  "description": "Plataforma de intercambio seguro de figuritas. Incluye inventario interactivo, motor de compatibilidad, mapa de zonas seguras, chat privado con filtro anti-phishing, escaneo de repetidas y planillas escritas a mano por IA de Gemini, y validador por código QR.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

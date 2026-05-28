@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'anonymous');
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity Validations
+    function isValidUserProfile(data) {
+      return data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 150
+        && data.email is string && data.email.size() <= 150
+        && data.city in ['CABA', 'Rosario', 'Córdoba']
+        && data.neighborhood is string && data.neighborhood.size() <= 100
+        && data.reputation is number && data.reputation >= 1.0 && data.reputation <= 5.0
+        && data.verified is bool
+        && data.bio is string && data.bio.size() <= 1000
+        && data.reviewsCount is number && data.reviewsCount >= 0;
+    }
+
+    function isValidStickerState(data) {
+      return data.status in ['tengo', 'falta', 'repetida', 'none'];
+    }
+
+    function isValidReview(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.reviewerName is string && data.reviewerName.size() <= 150
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() <= 1000
+        && data.date is string;
+    }
+
+    function isValidChatRoom(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.matchId is string && data.matchId.size() <= 128
+        && data.participants is list && data.participants.size() <= 2
+        && data.participants.size() > 0 && data.participants[0] is string
+        && data.lastUpdated is string;
+    }
+
+    function isValidChatMessage(data, chatRoomId) {
+      return data.id is string && data.id.size() <= 128
+        && (data.senderId == request.auth.uid || chatRoomId.startsWith('room-preload-'))
+        && data.text is string && data.text.size() <= 2000
+        && data.timestamp is string;
+    }
+
+    function isValidSwapMatch(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.uids is list && data.uids.size() <= 2
+        && data.uids.size() > 0 && data.uids[0] is string
+        && data.compatibilityScore is number
+        && data.status in ['pending', 'matched', 'rejected', 'completed']
+        && data.stickersIProvide is list
+        && data.stickersTheyProvide is list;
+    }
+
+    // Rules for each collection
+    match /users/{uid} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isEmailVerified() && isOwner(uid) && isValidUserProfile(request.resource.data) && request.resource.data.verified == false && request.resource.data.reputation == 5.0;
+      allow update: if isEmailVerified() && isOwner(uid) && isValidUserProfile(request.resource.data) && (
+        request.resource.data.verified == resource.data.verified &&
+        request.resource.data.reputation == resource.data.reputation &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.uid == resource.data.uid
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts']);
+      allow delete: if false; // Profiles are immortal
+    }
+
+    match /users/{uid}/stickers/{stickerId} {
+      allow read: if isSignedIn();
+      allow write: if isEmailVerified() && isOwner(uid) && (request.method == 'delete' || isValidStickerState(request.resource.data));
+    }
+
+    match /users/{uid}/reviews/{reviewId} {
+      allow read: if isSignedIn();
+      allow create: if isEmailVerified() && isValidId(reviewId) && isValidReview(request.resource.data);
+      allow update, delete: if false; // Reviews cannot be edited
+    }
+
+    match /chats/{chatRoomId} {
+      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow create: if isEmailVerified() && isValidId(chatRoomId) && isValidChatRoom(request.resource.data) && (request.auth.uid in request.resource.data.participants);
+      allow update: if isEmailVerified() && (request.auth.uid in resource.data.participants) && isValidChatRoom(request.resource.data) && request.resource.data.participants == resource.data.participants && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastUpdated']);
+      allow delete: if false;
+    }
+
+    match /chats/{chatRoomId}/messages/{messageId} {
+      allow read: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participants);
+      allow create: if isEmailVerified() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participants) && isValidChatMessage(request.resource.data, chatRoomId);
+      allow update, delete: if false; // Messages are immutable
+    }
+
+    match /matches/{matchId} {
+      allow get: if isSignedIn() && (request.auth.uid in resource.data.uids);
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.uids);
+      allow create: if isEmailVerified() && isValidId(matchId) && isValidSwapMatch(request.resource.data) && (request.auth.uid in request.resource.data.uids);
+      allow update: if isEmailVerified() && (request.auth.uid in resource.data.uids) && isValidSwapMatch(request.resource.data) && request.resource.data.uids == resource.data.uids && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if false;
+    }
+  }
+}

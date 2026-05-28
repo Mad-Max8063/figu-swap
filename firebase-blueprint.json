@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public and private metadata for a registered collector",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID from Firebase Auth" },
+        "displayName": { "type": "string", "description": "Collector nick name" },
+        "email": { "type": "string", "description": "User email address" },
+        "photoURL": { "type": "string", "description": "URL to profile photo" },
+        "city": { "type": "string", "enum": ["CABA", "Rosario", "Córdoba"], "description": "Active city area" },
+        "neighborhood": { "type": "string", "description": "Area within city" },
+        "reputation": { "type": "number", "description": "Average rating between 1 and 5" },
+        "verified": { "type": "boolean", "description": "Whether certified by municipality" },
+        "bio": { "type": "string", "description": "Brief swap bio" },
+        "reviewsCount": { "type": "number", "description": "Total swaps completed" },
+        "stickerCounts": {
+          "type": "object",
+          "description": "Pre-aggregated pegadas, buscadas, repes metrics"
+        }
+      },
+      "required": ["uid", "displayName", "email", "city", "neighborhood", "reputation", "verified"]
+    },
+    "StickerState": {
+      "title": "StickerState",
+      "description": "User specific state for a single sticker",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["tengo", "falta", "repetida", "none"] }
+      },
+      "required": ["status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Rating review left by another collector",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reviewerName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "reviewerName", "rating", "comment", "date"]
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "description": "Core conversation channel between two collectors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "matchId": { "type": "string" },
+        "participants": { "type": "array" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["id", "matchId", "participants", "lastUpdated"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "A single text message inside a ChatRoom",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "flagged": { "type": "boolean" },
+        "flaggedReason": { "type": "string" }
+      },
+      "required": ["id", "senderId", "text", "timestamp"]
+    },
+    "SwapMatch": {
+      "title": "SwapMatch",
+      "description": "Indicates swiping match status and sticker exchange recommendations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uids": { "type": "array" },
+        "compatibilityScore": { "type": "number" },
+        "stickersIProvide": { "type": "array" },
+        "stickersTheyProvide": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "matched", "rejected", "completed"] }
+      },
+      "required": ["id", "uids", "compatibilityScore", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "Store of public/private collector profiles"
+    },
+    "/users/{uid}/stickers/{stickerId}": {
+      "schema": "StickerState",
+      "description": "Status of each individual sticker inside a collector's sub-album"
+    },
+    "/users/{uid}/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Subcollection of physical trade reviews left about a user"
+    },
+    "/chats/{chatRoomId}": {
+      "schema": "ChatRoom",
+      "description": "Direct chat sessions mapping pairs of users"
+    },
+    "/chats/{chatRoomId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "The thread of messages in this chat"
+    },
+    "/matches/{matchId}": {
+      "schema": "SwapMatch",
+      "description": "Collector matches computing cross-dependencies"
+    }
+  }
+}
