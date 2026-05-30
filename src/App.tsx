@@ -27,6 +27,7 @@ import {
   User
 } from './firebase';
 import { signInAnonymously } from 'firebase/auth';
+import { deleteDoc } from 'firebase/firestore';
 
 export enum OperationType {
   CREATE = 'create',
@@ -106,6 +107,7 @@ export default function App() {
       reviews: [
         { id: 'r-user-1', reviewerName: 'Carlos Gómez', rating: 5, comment: 'Excelente canje, completó rápido su parte.', date: '2026-05-24' }
       ],
+      isDemoMode: true,
       stickerCounts: { tengo: 642, falta: 300, repetida: 52 },
       photoURL: photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop'
     };
@@ -363,8 +365,9 @@ export default function App() {
       else if (s === 'repetida') counts.repetida++;
     });
 
-    const newTengo = 600 + counts.tengo;
-    const newFalta = 394 - counts.tengo + counts.falta;
+    const isDemo = currentUser?.isDemoMode !== false;
+    const newTengo = isDemo ? (600 + counts.tengo) : counts.tengo;
+    const newFalta = isDemo ? (394 - counts.tengo + counts.falta) : counts.falta;
     const newRepetida = counts.repetida;
 
     try {
@@ -417,8 +420,9 @@ export default function App() {
       else if (s === 'repetida') counts.repetida++;
     });
 
-    const newTengo = 600 + counts.tengo;
-    const newFalta = 394 - counts.tengo + counts.falta;
+    const isDemo = currentUser?.isDemoMode !== false;
+    const newTengo = isDemo ? (600 + counts.tengo) : counts.tengo;
+    const newFalta = isDemo ? (394 - counts.tengo + counts.falta) : counts.falta;
     const newRepetida = counts.repetida;
 
     try {
@@ -623,6 +627,124 @@ export default function App() {
     }
   };
 
+  const handleResetDemo = async () => {
+    if (!isAuthenticated || !auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    const email = auth.currentUser.email || 'M.Bernal8036@gmail.com';
+    const displayName = auth.currentUser.displayName || 'Marcos Bernal (Tú)';
+    const photoURL = auth.currentUser.photoURL;
+
+    try {
+      // 1. Delete all user custom stickers
+      const stickersSnap = await getDocs(collection(db, 'users', uid, 'stickers'));
+      for (const sDoc of stickersSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'users', uid, 'stickers', sDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete sticker ${sDoc.id}:`, err);
+        }
+      }
+
+      // 2. Delete all matches for this user
+      const matchesSnap = await getDocs(query(collection(db, 'matches'), where('uids', 'array-contains', uid)));
+      for (const mDoc of matchesSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'matches', mDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete match ${mDoc.id}:`, err);
+        }
+      }
+
+      // 3. Delete all chats and their messages
+      const chatsSnap = await getDocs(query(collection(db, 'chats'), where('participants', 'array-contains', uid)));
+      for (const cDoc of chatsSnap.docs) {
+        try {
+          // Delete messages subcollection
+          const msgsSnap = await getDocs(collection(db, 'chats', cDoc.id, 'messages'));
+          for (const msgDoc of msgsSnap.docs) {
+            await deleteDoc(doc(db, 'chats', cDoc.id, 'messages', msgDoc.id));
+          }
+          await deleteDoc(doc(db, 'chats', cDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete chat ${cDoc.id}:`, err);
+        }
+      }
+
+      // 4. Re-seed everything back to out-of-the-box demo state
+      await seedUserCollections(uid, email, displayName, photoURL);
+      
+      // 5. Navigate to inventory tab
+      setActiveTab('inventory');
+      alert("¡Álbum demo restablecido con éxito!");
+    } catch (err) {
+      console.error("Error resetting demo:", err);
+      alert("Hubo un error al restablecer el álbum demo.");
+    }
+  };
+
+  const handleClearAlbumReal = async () => {
+    if (!isAuthenticated || !auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+
+    try {
+      // 1. Delete all user custom stickers
+      const stickersSnap = await getDocs(collection(db, 'users', uid, 'stickers'));
+      for (const sDoc of stickersSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'users', uid, 'stickers', sDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete sticker ${sDoc.id}:`, err);
+        }
+      }
+
+      // 2. Clear all matches and chats
+      const matchesSnap = await getDocs(query(collection(db, 'matches'), where('uids', 'array-contains', uid)));
+      for (const mDoc of matchesSnap.docs) {
+        try {
+          await deleteDoc(doc(db, 'matches', mDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete match ${mDoc.id}:`, err);
+        }
+      }
+
+      const chatsSnap = await getDocs(query(collection(db, 'chats'), where('participants', 'array-contains', uid)));
+      for (const cDoc of chatsSnap.docs) {
+        try {
+          const msgsSnap = await getDocs(collection(db, 'chats', cDoc.id, 'messages'));
+          for (const msgDoc of msgsSnap.docs) {
+            await deleteDoc(doc(db, 'chats', cDoc.id, 'messages', msgDoc.id));
+          }
+          await deleteDoc(doc(db, 'chats', cDoc.id));
+        } catch (err) {
+          console.warn(`Could not delete chat ${cDoc.id}:`, err);
+        }
+      }
+
+      // 3. Update user profile to turn off demo mode, and set counts to 0
+      await updateDoc(doc(db, 'users', uid), {
+        isDemoMode: false,
+        'stickerCounts.tengo': 0,
+        'stickerCounts.falta': 0,
+        'stickerCounts.repetida': 0
+      });
+
+      // 4. Navigate to inventory tab
+      setActiveTab('inventory');
+      alert("¡Álbum real inicializado de cero (0%) con éxito!");
+    } catch (err) {
+      console.error("Error creating real album:", err);
+      alert("Hubo un error al crear tu álbum real.");
+    }
+  };
+  const handleUpdateSecurityPin = async (securityPin: string) => {
+    if (!isAuthenticated || !auth.currentUser) return;
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), { securityPin });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
+    }
+  };
+
 
   if (authLoading) {
     return (
@@ -752,9 +874,9 @@ export default function App() {
 
   const openedRoom = chatRooms.find(r => r.id === openedRoomId);
 
-  // Dinamically calculated progress metrics for global header
   const totalStickers = 994;
-  const ownedCount = Object.values(stickerStates).filter(status => status === 'tengo' || status === 'repetida').length;
+  const isDemo = currentUser?.isDemoMode !== false;
+  const ownedCount = isDemo ? (currentUser?.stickerCounts?.tengo || 642) : Object.values(stickerStates).filter(status => status === 'tengo' || status === 'repetida').length;
   const percentComplete = Math.min(100, Math.round((ownedCount / totalStickers) * 100)) || 0;
 
   return (
@@ -919,6 +1041,9 @@ export default function App() {
                 handleUpdateName={handleUpdateName}
                 handleTogglePrivateMode={handleTogglePrivateMode}
                 handleUpdateTutorInfo={handleUpdateTutorInfo}
+                onResetDemo={handleResetDemo}
+                onClearAlbum={handleClearAlbumReal}
+                onUpdateSecurityPin={handleUpdateSecurityPin}
               />
             )}
           </div>
@@ -934,8 +1059,8 @@ export default function App() {
             setOpenedRoomId(null);
           }
         }}
-        unreadCount={currentUser.privateMode ? 0 : (openedRoomId ? 0 : 2)}
-        matchCount={currentUser.privateMode ? 0 : deckHasCompatiblesCount(currentUser.city, activeMatches)}
+        unreadCount={currentUser.privateMode ? 0 : (openedRoomId ? 0 : chatRooms.filter(r => r.messages.length > 0).length)}
+        matchCount={currentUser.privateMode ? 0 : (isDemo ? deckHasCompatiblesCount(currentUser.city, activeMatches) : (currentUser.stickerCounts.tengo === 0 ? 0 : deckHasCompatiblesCount(currentUser.city, activeMatches)))}
         privateMode={currentUser.privateMode}
       />
     </div>
@@ -957,7 +1082,10 @@ function InventoryViewPropsWrapper({
   handleUpdateBio, 
   handleUpdateName,
   handleTogglePrivateMode,
-  handleUpdateTutorInfo
+  handleUpdateTutorInfo,
+  onResetDemo,
+  onClearAlbum,
+  onUpdateSecurityPin
 }: { 
   currentUser: UserProfile; 
   handleChangeUserCity: (city: CityLocation) => void;
@@ -965,6 +1093,9 @@ function InventoryViewPropsWrapper({
   handleUpdateName: (name: string) => void;
   handleTogglePrivateMode: (enabled: boolean) => void;
   handleUpdateTutorInfo: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
+  onResetDemo?: () => Promise<void>;
+  onClearAlbum?: () => Promise<void>;
+  onUpdateSecurityPin?: (pin: string) => Promise<void>;
 }) {
 
   return (
@@ -975,6 +1106,9 @@ function InventoryViewPropsWrapper({
       onUpdateName={handleUpdateName}
       onTogglePrivateMode={handleTogglePrivateMode}
       onUpdateTutorInfo={handleUpdateTutorInfo}
+      onResetDemo={onResetDemo}
+      onClearAlbum={onClearAlbum}
+      onUpdateSecurityPin={onUpdateSecurityPin}
     />
   );
 }

@@ -39,6 +39,8 @@ export interface UserProfile {
   isMinor?: boolean;
   tutorEmail?: string;
   tutorVerified?: boolean;
+  isDemoMode?: boolean;
+  securityPin?: string;
 }
 
 export interface CompactStickerState {

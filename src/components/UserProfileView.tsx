@@ -9,9 +9,22 @@ interface UserProfileViewProps {
   onUpdateName: (name: string) => void;
   onTogglePrivateMode: (enabled: boolean) => void;
   onUpdateTutorInfo?: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
+  onResetDemo?: () => Promise<void>;
+  onClearAlbum?: () => Promise<void>;
+  onUpdateSecurityPin?: (pin: string) => Promise<void>;
 }
 
-export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, onUpdateName, onTogglePrivateMode, onUpdateTutorInfo }: UserProfileViewProps) {
+export default function UserProfileView({ 
+  user, 
+  onChangeUserCity, 
+  onUpdateBio, 
+  onUpdateName, 
+  onTogglePrivateMode, 
+  onUpdateTutorInfo, 
+  onResetDemo, 
+  onClearAlbum,
+  onUpdateSecurityPin
+}: UserProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(user.displayName);
   const [editedBio, setEditedBio] = useState(user.bio);
@@ -23,6 +36,18 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
   const [pinInput, setPinInput] = useState('');
   const [showPinError, setShowPinError] = useState(false);
 
+  // Security action PIN states (for reset and clear album)
+  const [showPinModalForAction, setShowPinModalForAction] = useState<'reset' | 'clear' | null>(null);
+  const [securityPinInput, setSecurityPinInput] = useState('');
+  const [securityPinError, setSecurityPinError] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(false);
+
+  // New PIN input state
+  const [newPinInput, setNewPinInput] = useState('');
+  const [pinChangeSuccess, setPinChangeSuccess] = useState(false);
+  const [pinChangeError, setPinChangeError] = useState(false);
+  const [isChangingPin, setIsChangingPin] = useState(false);
+
   const verifyTutorPin = () => {
     if (pinInput === '1234') {
       setShowPinError(false);
@@ -31,6 +56,54 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
       }
     } else {
       setShowPinError(true);
+    }
+  };
+
+  const handleActionWithPin = async () => {
+    const requiredPin = user.securityPin || '1234';
+    if (securityPinInput === requiredPin) {
+      setSecurityPinError(false);
+      setActionInProgress(true);
+      const action = showPinModalForAction;
+      try {
+        if (action === 'clear' && onClearAlbum) {
+          await onClearAlbum();
+        } else if (action === 'reset' && onResetDemo) {
+          await onResetDemo();
+        }
+        setShowPinModalForAction(null);
+        setSecurityPinInput('');
+      } catch (err) {
+        console.error("Action error:", err);
+      } finally {
+        setActionInProgress(false);
+      }
+    } else {
+      setSecurityPinError(true);
+    }
+  };
+
+  const handleSaveNewPin = async () => {
+    if (newPinInput.length !== 4) {
+      setPinChangeError(true);
+      return;
+    }
+    if (!onUpdateSecurityPin) return;
+
+    setIsChangingPin(true);
+    setPinChangeError(false);
+    setPinChangeSuccess(false);
+    try {
+      await onUpdateSecurityPin(newPinInput);
+      setPinChangeSuccess(true);
+      setNewPinInput('');
+      // Clear success indicator after 3 seconds
+      setTimeout(() => setPinChangeSuccess(false), 3000);
+    } catch (err) {
+      console.error("Error updating security PIN:", err);
+      setPinChangeError(true);
+    } finally {
+      setIsChangingPin(false);
     }
   };
 
@@ -365,6 +438,152 @@ export default function UserProfileView({ user, onChangeUserCity, onUpdateBio, o
           )}
         </div>
       </div>
+      
+      {/* Reset Demo Data / Real Album Card */}
+      {(onResetDemo || onClearAlbum) && (
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-xs font-bold text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className="h-4 w-4 text-emerald-450" /> Configuración de Control de Álbum
+            </h3>
+            <p className="text-[11px] text-neutral-450 leading-relaxed">
+              Selecciona cómo deseas gestionar los datos de tu colección en esta sesión. Puedes comenzar de cero con tu colección real o precargar datos de demostración.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {/* Start Clean Real Album Button */}
+            {onClearAlbum && (
+              <button
+                onClick={() => {
+                  setShowPinModalForAction('clear');
+                }}
+                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-950 font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] cursor-pointer text-center"
+                id="clear-album-real-button"
+              >
+                Comenzar Álbum Real (0%) ⚽
+              </button>
+            )}
+
+            {/* Reset Demo Button */}
+            {onResetDemo && (
+              <button
+                onClick={() => {
+                  setShowPinModalForAction('reset');
+                }}
+                className="w-full py-2.5 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 disabled:bg-neutral-900 disabled:text-neutral-600 text-rose-450 hover:text-rose-400 font-bold text-xs rounded-xl shadow-sm transition-all active:scale-[0.98] cursor-pointer text-center"
+                id="reset-demo-button"
+              >
+                Cargar Demo (64% Completado) 🧪
+              </button>
+            )}
+          </div>
+
+          {/* PIN Configuration Form */}
+          {onUpdateSecurityPin && (
+            <div className="pt-4 mt-4 border-t border-neutral-850 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-200">
+                  <Lock className="h-3.5 w-3.5 text-rose-500" />
+                  <span>PIN de Seguridad del Álbum</span>
+                </div>
+                <span className="text-[9px] font-mono bg-neutral-950 text-neutral-450 border border-neutral-800 px-2 py-0.5 rounded-md">
+                  PIN actual: {user.securityPin ? '•••• (Personalizado)' : '1234 (Por defecto)'}
+                </span>
+              </div>
+              <p className="text-[10px] text-neutral-400 leading-normal">
+                Para evitar borrados accidentales de tu progreso, configura un PIN numérico de 4 dígitos.
+              </p>
+              
+              <div className="flex gap-2 items-center">
+                <input
+                  type="password"
+                  maxLength={4}
+                  placeholder="Nuevo PIN"
+                  value={newPinInput}
+                  onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, ''))}
+                  className="bg-neutral-950 border border-neutral-800 focus:border-rose-500/40 rounded-lg py-2 px-3 text-center font-bold tracking-widest text-xs outline-none w-28 text-neutral-200"
+                />
+                <button
+                  onClick={handleSaveNewPin}
+                  disabled={newPinInput.length !== 4 || isChangingPin}
+                  className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-neutral-850 disabled:text-neutral-500 active:scale-95 text-neutral-950 font-bold text-xs px-4 py-2 rounded-lg transition-all cursor-pointer"
+                >
+                  {isChangingPin ? 'Guardando...' : 'Cambiar PIN'}
+                </button>
+              </div>
+
+              {pinChangeSuccess && (
+                <div className="text-[9px] text-emerald-400 font-bold animate-fade-in">
+                  ✓ ¡PIN actualizado correctamente!
+                </div>
+              )}
+              {pinChangeError && (
+                <div className="text-[9px] text-rose-450 block font-semibold animate-fade-in">
+                  ✗ Error al actualizar el PIN. Asegúrate de ingresar exactamente 4 números.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SECURITY ACTION PIN CONFIRMATION MODAL */}
+      {showPinModalForAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-md p-4 animate-fade-in">
+          <div className="bg-neutral-900 border-2 border-rose-500/30 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative">
+            <div className="w-14 h-14 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto border border-rose-500/25 text-rose-400">
+              <Lock className="h-6 w-6 animate-pulse" />
+            </div>
+            
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-wide">Confirmación de Seguridad</h3>
+              <p className="text-[11px] text-neutral-400 leading-relaxed">
+                Para evitar borrados accidentales de tu progreso, ingresá tu PIN de autorización de 4 números {user.securityPin ? '' : '(por defecto: '}<b className="text-neutral-200">{user.securityPin ? 'personalizado' : '1234'}</b>{user.securityPin ? '' : ')'}:
+              </p>
+            </div>
+
+            <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3">
+              <div className="flex gap-2 justify-center items-center">
+                <input
+                  type="password"
+                  maxLength={4}
+                  placeholder="PIN"
+                  value={securityPinInput}
+                  onChange={(e) => setSecurityPinInput(e.target.value.replace(/\D/g, ''))}
+                  disabled={actionInProgress}
+                  className="bg-neutral-900 border border-neutral-800 rounded-lg py-2 px-3 text-center font-bold tracking-widest text-sm outline-none w-24 text-neutral-200 focus:border-rose-500/40 disabled:opacity-50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleActionWithPin();
+                  }}
+                />
+                <button
+                  onClick={handleActionWithPin}
+                  disabled={actionInProgress}
+                  className="bg-rose-500 hover:bg-rose-600 disabled:bg-neutral-850 disabled:text-neutral-500 active:scale-95 text-neutral-950 px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer"
+                >
+                  {actionInProgress ? "Procesando..." : "Autorizar"}
+                </button>
+              </div>
+              {securityPinError && (
+                <span className="text-[9px] text-rose-450 block font-semibold">Código incorrecto. ¡Acceso denegado!</span>
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowPinModalForAction(null);
+                setSecurityPinInput('');
+                setSecurityPinError(false);
+              }}
+              disabled={actionInProgress}
+              className="text-xs text-neutral-500 hover:text-neutral-300 font-semibold uppercase tracking-wider disabled:opacity-55"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

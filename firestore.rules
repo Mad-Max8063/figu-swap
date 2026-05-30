@@ -37,7 +37,8 @@ service cloud.firestore {
         && data.reviewsCount is number && data.reviewsCount >= 0
         && (!('isMinor' in data) || data.isMinor is bool)
         && (!('tutorEmail' in data) || data.tutorEmail is string)
-        && (!('tutorVerified' in data) || data.tutorVerified is bool);
+        && (!('isDemoMode' in data) || data.isDemoMode is bool)
+        && (!('securityPin' in data) || (data.securityPin is string && data.securityPin.size() == 4 && data.securityPin.matches('^[0-9]+$')));
     }
 
     function isValidStickerState(data) {
@@ -62,7 +63,7 @@ service cloud.firestore {
 
     function isValidChatMessage(data, chatRoomId) {
       return data.id is string && data.id.size() <= 128
-        && (data.senderId == request.auth.uid || chatRoomId.startsWith('room-preload-'))
+        && (data.senderId == request.auth.uid || chatRoomId.matches('^room-preload-.*'))
         && data.text is string && data.text.size() <= 2000
         && data.timestamp is string;
     }
@@ -87,7 +88,7 @@ service cloud.firestore {
         request.resource.data.reputation == resource.data.reputation &&
         request.resource.data.email == resource.data.email &&
         request.resource.data.uid == resource.data.uid
-      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isMinor', 'tutorEmail', 'tutorVerified']);
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isMinor', 'tutorEmail', 'tutorVerified', 'isDemoMode', 'securityPin']);
       allow delete: if false; // Profiles are immortal
     }
 
@@ -107,13 +108,14 @@ service cloud.firestore {
       allow list: if isSignedIn() && (request.auth.uid in resource.data.participants);
       allow create: if isEmailVerified() && isValidId(chatRoomId) && isValidChatRoom(request.resource.data) && (request.auth.uid in request.resource.data.participants);
       allow update: if isEmailVerified() && (request.auth.uid in resource.data.participants) && isValidChatRoom(request.resource.data) && request.resource.data.participants == resource.data.participants && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastUpdated']);
-      allow delete: if false;
+      allow delete: if isEmailVerified() && (request.auth.uid in resource.data.participants);
     }
 
     match /chats/{chatRoomId}/messages/{messageId} {
       allow read: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participants);
       allow create: if isEmailVerified() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participants) && isValidChatMessage(request.resource.data, chatRoomId);
-      allow update, delete: if false; // Messages are immutable
+      allow update: if false;
+      allow delete: if isEmailVerified() && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatRoomId)).data.participants);
     }
 
     match /matches/{matchId} {
@@ -121,7 +123,7 @@ service cloud.firestore {
       allow list: if isSignedIn() && (request.auth.uid in resource.data.uids);
       allow create: if isEmailVerified() && isValidId(matchId) && isValidSwapMatch(request.resource.data) && (request.auth.uid in request.resource.data.uids);
       allow update: if isEmailVerified() && (request.auth.uid in resource.data.uids) && isValidSwapMatch(request.resource.data) && request.resource.data.uids == resource.data.uids && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
-      allow delete: if false;
+      allow delete: if isEmailVerified() && (request.auth.uid in resource.data.uids);
     }
   }
 }

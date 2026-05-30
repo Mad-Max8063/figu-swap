@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TEAMS, ALL_STICKERS } from '../data';
 import { CompactStickerState, Sticker, StickerStatus } from '../types';
-import { Search, Layers, CheckCircle2, AlertCircle, PlusCircle, Sparkles, SlidersHorizontal, Lock, FileText } from 'lucide-react';
+import { Search, Layers, CheckCircle2, AlertCircle, PlusCircle, Sparkles, SlidersHorizontal, Lock, FileText, X } from 'lucide-react';
 import ScannerMock from './ScannerMock';
 import PlanillaScanner from './PlanillaScanner';
 import { motion } from 'motion/react';
@@ -27,6 +27,47 @@ export default function InventoryView({
   const [showScanner, setShowScanner] = useState(false);
   const [showPlanillaScanner, setShowPlanillaScanner] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'tengo' | 'falta' | 'repetida'>('all');
+  const [selectedSticker, setSelectedSticker] = useState<Sticker | null>(null);
+
+  // Helper to resolve player position image
+  const getStickerImage = (sticker: Sticker) => {
+    const isArgentinianSpecial = sticker.id === 'ARG-1' || sticker.id === 'ARG-2' || sticker.id === 'ARG-3' || sticker.id === 'ARG-10' || sticker.id === 'ARG-11' || sticker.id === 'ARG-20';
+    if (isArgentinianSpecial) {
+      return `/stickers/${sticker.id}.png`;
+    }
+    return '/stickers/generic_player.png';
+  };
+
+  // Helper to fetch realistic Panini data
+  const getPlayerDetails = (stickerId: string) => {
+    const defaults: Record<string, { height: string; weight: string; birth: string; position: string }> = {
+      'ARG-1': { height: '1.95 m', weight: '88 kg', birth: '02/09/1992', position: 'Portero Titular' },
+      'ARG-2': { height: '1.75 m', weight: '70 kg', birth: '06/04/1998', position: 'Defensor Titular' },
+      'ARG-3': { height: '1.85 m', weight: '81 kg', birth: '27/04/1998', position: 'Defensor Titular' },
+      'ARG-10': { height: '1.70 m', weight: '72 kg', birth: '24/06/1987', position: 'Delantero Leyenda' },
+      'ARG-11': { height: '1.78 m', weight: '70 kg', birth: '24/12/1998', position: 'Mediocampista Estrella' },
+      'ARG-20': { height: '1.74 m', weight: '72 kg', birth: '22/08/1997', position: 'Delantero Titular' }
+    };
+    return defaults[stickerId] || { height: '1.80 m', weight: '75 kg', birth: '15/05/1999', position: 'Jugador Oficial' };
+  };
+
+  // Flag mapper
+  const getCountryFlag = (team: string) => {
+    const flags: Record<string, string> = {
+      'Argentina': '🇦🇷',
+      'Brasil': '🇧🇷',
+      'Francia': '🇫🇷',
+      'España': '🇪🇸',
+      'Alemania': '🇩🇪',
+      'Uruguay': '🇺🇾',
+      'México': '🇲🇽',
+      'Marruecos': '🇲🇦',
+      'Japón': '🇯🇵',
+      'Especiales Coca-Cola': '🥤',
+      'Intro & Estadios': '🏆'
+    };
+    return flags[team] || '🏳️';
+  };
 
   // Filter stickers based on active country tab OR search query
   const filteredStickers = ALL_STICKERS.filter((sticker) => {
@@ -289,59 +330,97 @@ export default function InventoryView({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" id="stickers-cards-grid">
             {filteredStickers.map((sticker) => {
               const currentStatus = stickerStates[sticker.id] || 'none';
+              const isUnlocked = currentStatus === 'tengo' || currentStatus === 'repetida';
+              
               return (
                 <motion.div
                   key={sticker.id}
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.15 }}
-                  className={`border rounded-xl p-3 transition-all flex flex-col justify-between space-y-2 bg-gradient-to-br ${getStatusColor(
-                    currentStatus
-                  )}`}
+                  className={`border rounded-xl p-3 transition-all flex flex-col justify-between space-y-2 relative overflow-hidden ${
+                    isUnlocked
+                      ? getStatusColor(currentStatus)
+                      : 'bg-neutral-950/50 border-dashed border-neutral-800/80 hover:border-neutral-700 text-neutral-500'
+                  }`}
                   id={`sticker-${sticker.id}`}
                 >
-                  <div className="flex items-start justify-between gap-1">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider bg-neutral-950/60 px-1.5 py-0.5 rounded text-neutral-200 border border-neutral-800">
+                  {/* Subtle empty slot watermark when locked */}
+                  {!isUnlocked && (
+                    <div className="absolute right-3 top-3 opacity-[0.03] select-none pointer-events-none font-black text-6xl">
+                      {sticker.number}
+                    </div>
+                  )}
+
+                  <div 
+                    className="flex items-start justify-between gap-2 cursor-pointer hover:opacity-90 flex-1 z-10"
+                    onClick={() => setSelectedSticker(sticker)}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                          isUnlocked 
+                            ? 'bg-neutral-950/60 text-neutral-200 border-neutral-800' 
+                            : 'bg-neutral-900/60 text-neutral-500 border-neutral-850'
+                        }`}>
                           {sticker.id}
                         </span>
                         {sticker.isSpecial && (
-                          <span className="text-[8px] bg-amber-500/20 text-amber-300 font-bold px-1 rounded animate-pulse">
-                            ESPECIAL ⭐
+                          <span className={`text-[8px] font-bold px-1 rounded ${
+                            isUnlocked 
+                              ? 'bg-amber-500/20 text-amber-300 animate-pulse' 
+                              : 'bg-neutral-900 text-neutral-600'
+                          }`}>
+                            {isUnlocked ? 'ESPECIAL ⭐' : 'ESPECIAL'}
+                          </span>
+                        )}
+                        {isUnlocked ? (
+                          <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-bold px-1 rounded">
+                            ¡PEGADA! 🏆
+                          </span>
+                        ) : (
+                          <span className="text-[8px] text-neutral-650 font-medium">
+                            VACÍO 🔲
                           </span>
                         )}
                       </div>
-                      <h4 className="text-xs font-bold text-neutral-100 truncate mt-1">
+                      <h4 className={`text-xs font-bold mt-1.5 truncate ${isUnlocked ? 'text-neutral-100' : 'text-neutral-500'}`}>
                         {sticker.name}
                       </h4>
-                      <p className="text-[9px] text-neutral-400 truncate">{sticker.team}</p>
+                      <p className="text-[9px] text-neutral-500 truncate">{sticker.team}</p>
                     </div>
 
-                    {/* Quick status icons indicators */}
-                    <div className="shrink-0">
-                      {currentStatus === 'tengo' && (
-                        <span className="text-emerald-400" title="Tengo"><CheckCircle2 className="h-4.5 w-4.5 fill-emerald-500/10" /></span>
-                      )}
-                      {currentStatus === 'falta' && (
-                        <span className="text-amber-500" title="Me Falta"><AlertCircle className="h-4.5 w-4.5" /></span>
-                      )}
-                      {currentStatus === 'repetida' && (
-                        <span className="text-emerald-300 flex items-center gap-0.5 text-[9px] font-black bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-450 animate-pulse">
-                          REPE x2
-                        </span>
+                    {/* Unlocked sticker thumbnail preview OR generic silhouette placeholder */}
+                    <div className="shrink-0 relative">
+                      {isUnlocked ? (
+                        <div className="w-11 h-14 rounded-md border border-neutral-700 bg-neutral-950 overflow-hidden relative shadow-sm hover:scale-105 transition-transform">
+                          <img 
+                            src={getStickerImage(sticker)} 
+                            alt={sticker.name}
+                            className="w-full h-full object-cover object-center"
+                            onError={(e) => { e.currentTarget.src = '/stickers/generic_fw.png'; }}
+                          />
+                          {/* Foil glow effect inside grid */}
+                          {sticker.isSpecial && (
+                            <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-white/20 animate-pulse pointer-events-none" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-11 h-14 rounded-md border border-neutral-900 bg-neutral-900/40 flex items-center justify-center text-neutral-700 font-black text-xs shadow-inner">
+                          ?
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* Status buttons */}
-                  <div className="grid grid-cols-3 gap-1 grid-flow-row text-[10px] pt-1.5 border-t border-neutral-800/40">
+                  <div className="grid grid-cols-3 gap-1 grid-flow-row text-[10px] pt-1.5 border-t border-neutral-800/20 z-10">
                     <button
                       onClick={() => onUpdateStickerStatus(sticker.id, currentStatus === 'tengo' ? 'none' : 'tengo')}
                       className={`py-1 rounded-md font-bold transition-all ${
                         currentStatus === 'tengo'
                           ? 'bg-emerald-550 text-neutral-950 shadow-sm'
-                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-300'
+                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400'
                       }`}
                     >
                       Lo Tengo
@@ -351,7 +430,7 @@ export default function InventoryView({
                       className={`py-1 rounded-md font-bold transition-all ${
                         currentStatus === 'falta'
                           ? 'bg-amber-500 text-neutral-950 shadow-sm'
-                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-300'
+                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400'
                       }`}
                     >
                       Falta
@@ -361,7 +440,7 @@ export default function InventoryView({
                       className={`py-1 rounded-md font-bold transition-all ${
                         currentStatus === 'repetida'
                           ? 'bg-emerald-400 text-neutral-950 shadow-md transform scale-[1.02]'
-                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-200 border border-emerald-500/10'
+                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400 border border-emerald-500/10'
                       }`}
                     >
                       Repetida
@@ -378,6 +457,137 @@ export default function InventoryView({
           </div>
         )}
       </div>
+
+      {/* High-Fidelity 3D Holographic Anime Sticker Modal */}
+      {selectedSticker && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 max-w-sm w-full relative shadow-2xl flex flex-col items-center"
+          >
+            <button 
+              onClick={() => setSelectedSticker(null)}
+              className="absolute top-4 right-4 bg-neutral-950 hover:bg-neutral-800 text-neutral-400 p-1.5 rounded-full border border-neutral-800 transition-all cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Title Section */}
+            <div className="text-center w-full mb-4">
+              <div className="flex items-center justify-center gap-1">
+                <Sparkles className="h-4 w-4 text-amber-400 animate-spin-slow" />
+                <span className="text-[10px] text-amber-400 uppercase tracking-widest font-black">Figurita Coleccionable Animé</span>
+              </div>
+              <h3 className="text-base font-bold text-neutral-100 mt-0.5">{selectedSticker.name}</h3>
+              <p className="text-xs text-neutral-400 flex items-center justify-center gap-1">
+                <span>{getCountryFlag(selectedSticker.team)}</span>
+                <span>{selectedSticker.team}</span>
+              </p>
+            </div>
+
+            {/* Panini-style Shiny Holographic Sticker card */}
+            <div 
+              onMouseMove={(e) => {
+                const card = e.currentTarget;
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const px = (x / rect.width) * 100;
+                const py = (y / rect.height) * 100;
+                card.style.setProperty('--x', `${px}%`);
+                card.style.setProperty('--y', `${py}%`);
+                
+                // Tilt effect
+                const rx = -(y - rect.height / 2) / (rect.height / 2) * 8;
+                const ry = (x - rect.width / 2) / (rect.width / 2) * 8;
+                card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+              }}
+              onMouseLeave={(e) => {
+                const card = e.currentTarget;
+                card.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg)';
+                card.style.setProperty('--x', '50%');
+                card.style.setProperty('--y', '50%');
+              }}
+              style={{
+                transformStyle: 'preserve-3d',
+                transition: 'transform 0.1s ease-out',
+                position: 'relative'
+              }}
+              className="w-64 h-96 rounded-2xl bg-neutral-950 border-2 border-neutral-700 shadow-xl overflow-hidden flex flex-col p-3.5 space-y-3 cursor-pointer group"
+            >
+              {/* Premium Shiny overlay */}
+              <div 
+                className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  backgroundImage: `radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.22) 0%, rgba(255, 180, 0, 0.05) 40%, transparent 70%)`
+                }}
+              />
+
+              {/* Sticker Header Layout */}
+              <div className="flex items-center justify-between z-20">
+                <span className="text-[10px] font-black font-mono bg-neutral-900/90 text-neutral-200 px-2 py-0.5 rounded border border-neutral-800">
+                  {selectedSticker.id}
+                </span>
+                <span className="text-[14px]">
+                  {getCountryFlag(selectedSticker.team)}
+                </span>
+              </div>
+
+              {/* Character Anime Illustration frame */}
+              <div className="flex-1 rounded-xl bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-800/80 overflow-hidden relative flex items-center justify-center">
+                <img 
+                  src={getStickerImage(selectedSticker)} 
+                  alt={selectedSticker.name}
+                  className="w-full h-full object-cover object-center scale-[1.01]"
+                  onError={(e) => {
+                    // Fallback to position icon if load fails
+                    e.currentTarget.src = '/stickers/generic_fw.png';
+                  }}
+                />
+
+                {/* Foil Sparkle indicators */}
+                {selectedSticker.isSpecial && (
+                  <div className="absolute top-2 right-2 bg-amber-500 text-neutral-950 p-1 rounded-full border border-neutral-750 shadow-md">
+                    <Sparkles className="h-3 w-3 animate-pulse" />
+                  </div>
+                )}
+              </div>
+
+              {/* Player Metadata (Panini Style) */}
+              <div className="bg-neutral-900/95 border border-neutral-800 rounded-xl p-2.5 space-y-1.5 z-20">
+                <div className="flex justify-between text-[9px] text-neutral-400 font-medium">
+                  <span>Pos: <strong className="text-neutral-200">{getPlayerDetails(selectedSticker.id).position}</strong></span>
+                  <span>Nacimiento: <strong className="text-neutral-200">{getPlayerDetails(selectedSticker.id).birth}</strong></span>
+                </div>
+                <div className="h-px bg-neutral-800" />
+                <div className="flex justify-between text-[9px] text-neutral-400 font-medium">
+                  <span>Altura: <strong className="text-neutral-200">{getPlayerDetails(selectedSticker.id).height}</strong></span>
+                  <span>Peso: <strong className="text-neutral-200">{getPlayerDetails(selectedSticker.id).weight}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticker Status Indicator inside popup */}
+            <div className="mt-4 text-center">
+              <span className="text-[9px] text-neutral-500 uppercase tracking-widest block mb-2">Estado actual</span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border ${
+                  stickerStates[selectedSticker.id] === 'tengo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                  stickerStates[selectedSticker.id] === 'falta' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                  stickerStates[selectedSticker.id] === 'repetida' ? 'bg-emerald-400/20 text-emerald-450 border-emerald-400/40 animate-pulse' :
+                  'bg-neutral-950 text-neutral-500 border-neutral-850'
+                }`}>
+                  {stickerStates[selectedSticker.id] === 'tengo' ? 'Lo tengo' :
+                   stickerStates[selectedSticker.id] === 'falta' ? 'Falta' :
+                   stickerStates[selectedSticker.id] === 'repetida' ? 'Repetida' :
+                   'No seleccionado'}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

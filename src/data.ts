@@ -23,7 +23,7 @@ export const STAR_PLAYERS: Record<string, Record<number, string>> = {
     5: 'Nicolás Tagliafico',
     8: 'Enzo Fernández',
     10: 'Lionel Messi ⭐',
-    11: 'Ángel Di María 🌟',
+    11: 'Alexis Mac Allister 🌟',
     9: 'Julián Álvarez',
     16: 'Rodrigo De Paul',
     20: 'Lautaro Martínez'
