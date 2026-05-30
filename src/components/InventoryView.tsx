@@ -42,6 +42,19 @@ export default function InventoryView({
     if (isArgentinianSpecial) {
       return `/stickers/${sticker.id}.png`;
     }
+
+    // Country-specific generic player fallbacks to match flag and jersey colors
+    const prefix = sticker.id.split('-')[0];
+    const supportedCountries = ['ARG', 'BRA', 'FRA', 'ESP', 'GER', 'URU', 'MEX', 'MAR', 'JPN'];
+    if (supportedCountries.includes(prefix)) {
+      if (prefix === 'JPN') {
+        const positions = ['gk', 'df', 'mf', 'fw'];
+        const posKey = positions[sticker.number % 4];
+        return `/stickers/generic_${posKey}.png`;
+      }
+      return `/stickers/generic_${prefix}.png`;
+    }
+
     return '/stickers/generic_player.png';
   };
 
@@ -410,7 +423,7 @@ export default function InventoryView({
                             src={getStickerImage(sticker)} 
                             alt={sticker.name}
                             className="w-full h-full object-cover object-center"
-                            onError={(e) => { e.currentTarget.src = '/stickers/generic_fw.png'; }}
+                            onError={(e) => { e.currentTarget.src = '/stickers/generic_player.png'; }}
                           />
                           {/* Foil glow effect inside grid */}
                           {sticker.isSpecial && (
@@ -582,7 +595,7 @@ export default function InventoryView({
                   className="w-full h-full object-cover object-center scale-[1.01]"
                   onError={(e) => {
                     // Fallback to position icon if load fails
-                    e.currentTarget.src = '/stickers/generic_fw.png';
+                    e.currentTarget.src = '/stickers/generic_player.png';
                   }}
                 />
 
