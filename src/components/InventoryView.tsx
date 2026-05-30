@@ -9,7 +9,9 @@ import { motion } from 'motion/react';
 
 interface InventoryViewProps {
   stickerStates: Record<string, StickerStatus>;
+  duplicateCounts?: Record<string, number>;
   onUpdateStickerStatus: (stickerId: string, status: StickerStatus) => void;
+  onUpdateStickerCount?: (stickerId: string, count: number) => void;
   onBulkAddDuplicates: (stickers: Sticker[]) => void;
   onBulkApplyChecklist: (updates: { id: string; status: StickerStatus }[]) => void;
   privateMode?: boolean;
@@ -17,7 +19,9 @@ interface InventoryViewProps {
 
 export default function InventoryView({ 
   stickerStates, 
+  duplicateCounts = {},
   onUpdateStickerStatus, 
+  onUpdateStickerCount,
   onBulkAddDuplicates, 
   onBulkApplyChecklist,
   privateMode 
@@ -31,7 +35,10 @@ export default function InventoryView({
 
   // Helper to resolve player position image
   const getStickerImage = (sticker: Sticker) => {
-    const isArgentinianSpecial = sticker.id === 'ARG-1' || sticker.id === 'ARG-2' || sticker.id === 'ARG-3' || sticker.id === 'ARG-10' || sticker.id === 'ARG-11' || sticker.id === 'ARG-20';
+    const isArgentinianSpecial = [
+      'ARG-1', 'ARG-2', 'ARG-3', 'ARG-4', 'ARG-5', 
+      'ARG-8', 'ARG-9', 'ARG-10', 'ARG-11', 'ARG-16', 'ARG-20'
+    ].includes(sticker.id);
     if (isArgentinianSpecial) {
       return `/stickers/${sticker.id}.png`;
     }
@@ -44,8 +51,13 @@ export default function InventoryView({
       'ARG-1': { height: '1.95 m', weight: '88 kg', birth: '02/09/1992', position: 'Portero Titular' },
       'ARG-2': { height: '1.75 m', weight: '70 kg', birth: '06/04/1998', position: 'Defensor Titular' },
       'ARG-3': { height: '1.85 m', weight: '81 kg', birth: '27/04/1998', position: 'Defensor Titular' },
+      'ARG-4': { height: '1.83 m', weight: '81 kg', birth: '12/02/1988', position: 'Defensor Titular' },
+      'ARG-5': { height: '1.72 m', weight: '66 kg', birth: '31/08/1992', position: 'Defensor Titular' },
+      'ARG-8': { height: '1.78 m', weight: '77 kg', birth: '17/01/2001', position: 'Mediocampista Titular' },
+      'ARG-9': { height: '1.70 m', weight: '71 kg', birth: '31/01/2000', position: 'Delantero Titular' },
       'ARG-10': { height: '1.70 m', weight: '72 kg', birth: '24/06/1987', position: 'Delantero Leyenda' },
       'ARG-11': { height: '1.78 m', weight: '70 kg', birth: '24/12/1998', position: 'Mediocampista Estrella' },
+      'ARG-16': { height: '1.80 m', weight: '74 kg', birth: '24/05/1994', position: 'Mediocampista Titular' },
       'ARG-20': { height: '1.74 m', weight: '72 kg', birth: '22/08/1997', position: 'Delantero Titular' }
     };
     return defaults[stickerId] || { height: '1.80 m', weight: '75 kg', birth: '15/05/1999', position: 'Jugador Oficial' };
@@ -435,16 +447,44 @@ export default function InventoryView({
                     >
                       Falta
                     </button>
-                    <button
-                      onClick={() => onUpdateStickerStatus(sticker.id, currentStatus === 'repetida' ? 'none' : 'repetida')}
-                      className={`py-1 rounded-md font-bold transition-all ${
-                        currentStatus === 'repetida'
-                          ? 'bg-emerald-400 text-neutral-950 shadow-md transform scale-[1.02]'
-                          : 'bg-neutral-950 hover:bg-neutral-800 text-neutral-400 border border-emerald-500/10'
-                      }`}
-                    >
-                      Repetida
-                    </button>
+                    {currentStatus === 'repetida' ? (
+                      <div className="flex items-center justify-between bg-emerald-400 text-neutral-950 rounded-md font-bold shadow-md transform scale-[1.02] overflow-hidden py-0.5 px-1.5 h-[22px]">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const currentCount = duplicateCounts[sticker.id] || 1;
+                            if (currentCount > 1) {
+                              onUpdateStickerCount?.(sticker.id, currentCount - 1);
+                            } else {
+                              onUpdateStickerStatus(sticker.id, 'tengo');
+                            }
+                          }}
+                          className="hover:bg-emerald-500/35 px-1 rounded text-neutral-950 font-black cursor-pointer text-xs select-none"
+                        >
+                          -
+                        </button>
+                        <span className="text-[10px] tracking-tight font-black select-none">
+                          {duplicateCounts[sticker.id] || 1} Rep
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const currentCount = duplicateCounts[sticker.id] || 1;
+                            onUpdateStickerCount?.(sticker.id, currentCount + 1);
+                          }}
+                          className="hover:bg-emerald-500/35 px-1 rounded text-neutral-950 font-black cursor-pointer text-xs select-none"
+                        >
+                          +
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onUpdateStickerStatus(sticker.id, 'repetida')}
+                        className="py-1 rounded-md font-bold bg-neutral-950 hover:bg-neutral-800 text-neutral-400 border border-emerald-500/10 transition-all"
+                      >
+                        Repetida
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -571,7 +611,7 @@ export default function InventoryView({
             {/* Sticker Status Indicator inside popup */}
             <div className="mt-4 text-center">
               <span className="text-[9px] text-neutral-500 uppercase tracking-widest block mb-2">Estado actual</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <span className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border ${
                   stickerStates[selectedSticker.id] === 'tengo' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
                   stickerStates[selectedSticker.id] === 'falta' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
@@ -583,6 +623,35 @@ export default function InventoryView({
                    stickerStates[selectedSticker.id] === 'repetida' ? 'Repetida' :
                    'No seleccionado'}
                 </span>
+                {stickerStates[selectedSticker.id] === 'repetida' && (
+                  <div className="flex items-center bg-neutral-950 border border-neutral-800 rounded-full py-1 px-2.5 shadow-inner">
+                    <button
+                      onClick={() => {
+                        const currentCount = duplicateCounts[selectedSticker.id] || 1;
+                        if (currentCount > 1) {
+                          onUpdateStickerCount?.(selectedSticker.id, currentCount - 1);
+                        } else {
+                          onUpdateStickerStatus(selectedSticker.id, 'tengo');
+                        }
+                      }}
+                      className="text-xs text-neutral-400 hover:text-white px-1.5 font-bold cursor-pointer select-none"
+                    >
+                      -
+                    </button>
+                    <span className="text-[11px] text-emerald-300 font-mono font-black px-1.5 min-w-[32px] text-center">
+                      x{duplicateCounts[selectedSticker.id] || 1}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const currentCount = duplicateCounts[selectedSticker.id] || 1;
+                        onUpdateStickerCount?.(selectedSticker.id, currentCount + 1);
+                      }}
+                      className="text-xs text-neutral-400 hover:text-white px-1.5 font-bold cursor-pointer select-none"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

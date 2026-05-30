@@ -81,6 +81,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [stickerStates, setStickerStates] = useState<Record<string, StickerStatus>>({});
+  const [duplicateCounts, setDuplicateCounts] = useState<Record<string, number>>({});
   const [activeTab, setActiveTab] = useState<string>('inventory');
   const [activeMatches, setActiveMatches] = useState<SwapMatch[]>([]);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -234,10 +235,14 @@ export default function App() {
     if (!isAuthenticated || !auth.currentUser) return;
     const unsub = onSnapshot(collection(db, 'users', auth.currentUser.uid, 'stickers'), (snapshot) => {
       const states: Record<string, StickerStatus> = {};
+      const counts: Record<string, number> = {};
       snapshot.forEach((document) => {
-        states[document.id] = (document.data() as any).status;
+        const data = document.data() as any;
+        states[document.id] = data.status;
+        counts[document.id] = data.count || (data.status === 'repetida' ? 1 : 0);
       });
       setStickerStates(states);
+      setDuplicateCounts(counts);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/stickers`);
     });
@@ -350,19 +355,62 @@ export default function App() {
     if (!isAuthenticated || !auth.currentUser) return;
     const stickerRef = doc(db, 'users', auth.currentUser.uid, 'stickers', stickerId);
     try {
-      await setDoc(stickerRef, { status });
+      const count = status === 'repetida' ? 1 : 0;
+      await setDoc(stickerRef, { status, count });
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser.uid}/stickers/${stickerId}`);
     }
 
     // Recalculate tally metrics
     const updated = { ...stickerStates, [stickerId]: status };
+    const updatedCounts = { ...duplicateCounts, [stickerId]: status === 'repetida' ? 1 : 0 };
     const counts = { tengo: 0, falta: 0, repetida: 0 };
     Object.keys(updated).forEach(id => {
       const s = updated[id];
       if (s === 'tengo') counts.tengo++;
       else if (s === 'falta') counts.falta++;
-      else if (s === 'repetida') counts.repetida++;
+      else if (s === 'repetida') {
+        counts.repetida += (updatedCounts[id] || 1);
+      }
+    });
+
+    const isDemo = currentUser?.isDemoMode !== false;
+    const newTengo = isDemo ? (600 + counts.tengo) : counts.tengo;
+    const newFalta = isDemo ? (394 - counts.tengo + counts.falta) : counts.falta;
+    const newRepetida = counts.repetida;
+
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        'stickerCounts.tengo': newTengo,
+        'stickerCounts.falta': newFalta,
+        'stickerCounts.repetida': newRepetida
+      });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
+    }
+  };
+
+  // Update a single Sticker Duplicates count on the user inventory
+  const handleUpdateStickerCount = async (stickerId: string, count: number) => {
+    if (!isAuthenticated || !auth.currentUser) return;
+    const stickerRef = doc(db, 'users', auth.currentUser.uid, 'stickers', stickerId);
+    try {
+      await setDoc(stickerRef, { status: 'repetida', count });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser.uid}/stickers/${stickerId}`);
+    }
+
+    // Recalculate tally metrics
+    const updated = { ...stickerStates, [stickerId]: 'repetida' };
+    const updatedCounts = { ...duplicateCounts, [stickerId]: count };
+    const counts = { tengo: 0, falta: 0, repetida: 0 };
+    Object.keys(updated).forEach(id => {
+      const s = updated[id];
+      if (s === 'tengo') counts.tengo++;
+      else if (s === 'falta') counts.falta++;
+      else if (s === 'repetida') {
+        counts.repetida += (updatedCounts[id] || 1);
+      }
     });
 
     const isDemo = currentUser?.isDemoMode !== false;
@@ -947,7 +995,9 @@ export default function App() {
             {activeTab === 'inventory' && (
               <InventoryView
                 stickerStates={stickerStates}
+                duplicateCounts={duplicateCounts}
                 onUpdateStickerStatus={handleUpdateStickerStatus}
+                onUpdateStickerCount={handleUpdateStickerCount}
                 onBulkAddDuplicates={handleBulkAddDuplicates}
                 onBulkApplyChecklist={handleBulkApplyChecklist}
                 privateMode={currentUser.privateMode}
