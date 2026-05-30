@@ -439,6 +439,35 @@ export default function UserProfileView({
         </div>
       </div>
       
+      {/* Developer Promotion Banner */}
+      <div className="bg-gradient-to-r from-neutral-900 via-emerald-950/10 to-neutral-900 border border-emerald-500/10 rounded-2xl p-5 shadow-lg relative overflow-hidden text-center space-y-3">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(16,185,129,0.03)_0%,_transparent_75%)] pointer-events-none" />
+        
+        <div className="space-y-1.5 z-10 relative">
+          <span className="text-[9px] text-emerald-400 font-black uppercase tracking-widest block">
+            Desarrollador de la Aplicación
+          </span>
+          <h3 className="text-sm font-bold text-neutral-100">
+            Matías Maximiliano Bernal <span className="text-emerald-400 font-medium">(Max)</span>
+          </h3>
+          <p className="text-[11px] text-neutral-450 leading-relaxed max-w-sm mx-auto">
+            ¿Te gustó FiguSwap? Conocé más sobre mi trabajo, soluciones tecnológicas a medida y otros desarrollos profesionales en mi web oficial.
+          </p>
+        </div>
+
+        <div className="pt-1.5 z-10 relative">
+          <a
+            href="https://maxdevssolutions.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 px-4 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            <span>Visitar maxdevssolutions.com</span>
+          </a>
+        </div>
+      </div>
+
       {/* Reset Demo Data / Real Album Card */}
       {(onResetDemo || onClearAlbum) && (
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg space-y-4">
