@@ -448,19 +448,27 @@ export default function UserProfileView({
             Desarrollador de la Aplicación
           </span>
           <h3 className="text-sm font-bold text-neutral-100">
-            Matías Maximiliano Bernal <span className="text-emerald-400 font-medium">(Max)</span>
+            Max <span className="text-emerald-400 font-medium">(MaxDevs Solutions)</span>
           </h3>
-          <p className="text-[11px] text-neutral-450 leading-relaxed max-w-sm mx-auto">
-            ¿Te gustó FiguSwap? Conocé más sobre mi trabajo, soluciones tecnológicas a medida y otros desarrollos profesionales en mi web oficial.
+          <p className="text-[11px] text-neutral-400 leading-relaxed max-w-sm mx-auto">
+            FiguSwap Argentina es un proyecto 100% gratuito y libre de publicidad. Si te ayudó a completar tu álbum, podés apoyar a su creador con una donación voluntaria para financiar futuros desarrollos independientes.
           </p>
         </div>
 
-        <div className="pt-1.5 z-10 relative">
+        <div className="pt-1.5 z-10 relative flex flex-wrap gap-2 justify-center">
+          <a
+            href="https://cafecito.app/maxdevs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 px-4 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <span>☕ Invitar un Cafecito</span>
+          </a>
           <a
             href="https://maxdevssolutions.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 px-4 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-[0.98] cursor-pointer"
+            className="inline-flex items-center gap-1.5 border border-neutral-800 hover:bg-neutral-900 text-neutral-300 px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             <Globe className="h-3.5 w-3.5" />
             <span>Visitar maxdevssolutions.com</span>
