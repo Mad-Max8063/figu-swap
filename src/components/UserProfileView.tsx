@@ -457,7 +457,7 @@ export default function UserProfileView({
 
         <div className="pt-1.5 z-10 relative flex flex-wrap gap-2 justify-center">
           <a
-            href="https://cafecito.app/maxdevs"
+            href="https://cafecito.app/maxdevssolutions"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-neutral-950 px-4 py-2 rounded-xl text-xs font-black shadow-md transition-all active:scale-[0.98] cursor-pointer"
