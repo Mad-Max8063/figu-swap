@@ -221,14 +221,14 @@ export default function InventoryView({
       {/* Real-time Global Progress Bar */}
       <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl shadow-md space-y-2">
         <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-neutral-300 uppercase tracking-wider">Mi Álbum FiguSwap</span>
-          <span className="text-emerald-400 font-mono">
+          <span className="text-neutral-300 uppercase tracking-wider">Mi Álbum FiguMatch</span>
+          <span className="text-brand-500 font-mono">
             {ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length} / {ALL_STICKERS.length} pegadas ({Math.round((ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length / ALL_STICKERS.length) * 100) || 0}%)
           </span>
         </div>
         <div className="h-2.5 w-full bg-neutral-950 rounded-full overflow-hidden border border-neutral-850">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full transition-all duration-700"
+            className="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full transition-all duration-700"
             style={{ width: `${Math.round((ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length / ALL_STICKERS.length) * 100) || 0}%` }}
           />
         </div>

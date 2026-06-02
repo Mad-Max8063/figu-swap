@@ -293,12 +293,12 @@ export default function ChatRoomView({
                         <rect x="70" y="80" width="20" height="10" fill="currentColor" />
                         <rect x="45" y="85" width="20" height="15" fill="currentColor" />
                       </svg>
-                      <span className="text-[8px] font-mono text-neutral-900 block mt-1.5 font-bold">FiguSwap-{currentUser.uid}</span>
+                      <span className="text-[8px] font-mono text-neutral-900 block mt-1.5 font-bold">FiguMatch-{currentUser.uid}</span>
                     </div>
                   ) : (
                     <button
                       onClick={triggerGenerateQR}
-                      className="w-full py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-750 text-emerald-400 font-bold text-xs rounded-xl flex items-center justify-center gap-1"
+                      className="w-full py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-750 text-brand-500 font-bold text-xs rounded-xl flex items-center justify-center gap-1"
                     >
                       Generar QR de Canje
                     </button>

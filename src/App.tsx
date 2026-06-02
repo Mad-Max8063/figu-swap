@@ -809,19 +809,19 @@ export default function App() {
       <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col justify-center items-center p-6 antialiased" id="login-auth-lobby">
         <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-8 space-y-7 shadow-2xl relative overflow-hidden">
           {/* Subtle decoration sphere */}
-          <div className="absolute -top-10 -right-10 h-36 w-36 bg-emerald-550/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -top-10 -right-10 h-36 w-36 bg-brand-500/5 rounded-full blur-3xl animate-pulse" />
 
           {/* Logo Brand Header */}
           <div className="text-center space-y-2.5 relative">
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 rounded-2xl inline-block shadow-md">
+            <div className="p-3 bg-brand-500/10 text-brand-500 border border-brand-500/20 rounded-2xl inline-block shadow-md shadow-brand-500/5">
               <Sparkles className="h-8 w-8 animate-bounce" />
             </div>
             <div>
               <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-100 flex items-center justify-center gap-1">
-                <span>FiguSwap</span>
-                <span className="text-emerald-400 text-xs py-0.5 px-2 bg-emerald-500/15 border border-emerald-400/20 rounded-full font-mono font-bold tracking-widest leading-none">AR</span>
+                <span>FiguMatch</span>
+                <span className="text-brand-500 text-xs py-0.5 px-2 bg-brand-500/10 border border-brand-500/20 rounded-full font-mono font-bold tracking-widest leading-none">AR</span>
               </h1>
-              <p className="text-[10px] text-emerald-400 font-semibold tracking-widest font-mono uppercase">Intercambio de figuritas del Mundial</p>
+              <p className="text-[10px] text-brand-500 font-semibold tracking-widest font-mono uppercase">Intercambio de figuritas del Mundial</p>
             </div>
           </div>
 
@@ -833,11 +833,11 @@ export default function App() {
             {/* Stats board */}
             <div className="grid grid-cols-2 gap-3.5 bg-neutral-950 p-4 rounded-2xl border border-neutral-850 text-center text-xs font-bold">
               <div className="space-y-0.5">
-                <span className="text-emerald-400 text-sm block">994</span>
+                <span className="text-brand-500 text-sm block">994</span>
                 <span className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold">Figus Habilitadas</span>
               </div>
               <div className="space-y-0.5">
-                <span className="text-emerald-400 text-sm block">100%</span>
+                <span className="text-brand-500 text-sm block">100%</span>
                 <span className="text-[9px] text-neutral-500 uppercase tracking-wider font-semibold">Zonas Municipales</span>
               </div>
             </div>
@@ -847,7 +847,7 @@ export default function App() {
           <div className="space-y-2.5 pt-4">
             <button
               onClick={handleGoogleSignIn}
-              className="w-full bg-emerald-500 hover:bg-emerald-650 active:scale-[0.98] text-neutral-950 font-black text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              className="w-full bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 active:scale-[0.98] text-neutral-950 font-black text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-500/10 transition-all cursor-pointer"
             >
               <Key className="h-4.5 w-4.5" />
               <span>Ingresar con Google Account</span>
@@ -933,12 +933,12 @@ export default function App() {
       <header className="sticky top-0 bg-neutral-900/90 border-b border-neutral-800/80 backdrop-blur-md z-40 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 py-3 shrink-0 flex flex-col gap-2 shadow-md">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
-            <div className="p-1 px-1.5 bg-emerald-500 rounded-lg text-neutral-900 font-black tracking-tighter text-sm flex items-center gap-0.5 shadow-md">
-              <span>F</span><span className="text-neutral-900 text-xs">S</span>
+            <div className="p-1 px-1.5 bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg text-neutral-900 font-black tracking-tighter text-sm flex items-center gap-0.5 shadow-md shadow-brand-500/10">
+              <span>F</span><span className="text-neutral-900 text-xs">M</span>
             </div>
             <div>
-              <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguSwap</span>
-              <span className="text-[9px] text-emerald-400 tracking-wider font-mono uppercase block">Argentina 🇦🇷</span>
+              <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguMatch</span>
+              <span className="text-[9px] text-brand-500 tracking-wider font-mono uppercase block">Argentina 🇦🇷</span>
             </div>
           </div>
 

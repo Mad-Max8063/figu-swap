@@ -146,12 +146,12 @@ export default function SafeZonesMap() {
       </div>
 
       {/* Geofence Alert Warning */}
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex gap-2.5 items-start">
-        <Shield className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
+      <div className="bg-brand-500/5 border border-brand-500/15 rounded-xl p-3 flex gap-2.5 items-start">
+        <Shield className="h-5 w-5 text-brand-500 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wide">Puntos Municipales Libres de Estafas</h4>
+          <h4 className="text-xs font-bold text-brand-500 uppercase tracking-wide">Puntos Municipales Libres de Estafas</h4>
           <p className="text-[10px] text-neutral-300 leading-relaxed">
-            Por disposición del protocolo <b>FiguSwap® Argentina</b>, no se permite el intercambio comercial monetario ni el reparto en la vía pública desolada. Los chats solo permiten concretar citas en estos hubs seguros monitoreados y con patrulla civil.
+            Por disposición del protocolo <b>FiguMatch® Argentina</b>, no se permite el intercambio comercial monetario ni el reparto en la vía pública desolada. Los chats solo permiten concretar citas en estos hubs seguros monitoreados y con patrulla civil.
           </p>
         </div>
       </div>
