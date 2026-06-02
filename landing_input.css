@@ -4,9 +4,20 @@
   --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-outfit: "Outfit", sans-serif;
   
-  --color-brand-50: #eefdf6;
-  --color-brand-100: #d5fae7;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-950: #022c22;
+  --color-brand-50: #f0fdff;
+  --color-brand-100: #e0f7fc;
+  --color-brand-500: #81ecff; /* Electric Blue/Cyan */
+  --color-brand-600: #00e3fd; /* Cyber-Cyan */
+  --color-brand-950: #07090C; /* Deep Obsidian Void */
+  
+  --color-amethyst-500: #9f8eff; /* Electric Purple/Amethyst */
+  --color-amethyst-600: #7459f7;
+  
+  --color-obsidian-950: #07090C;
+  --color-obsidian-900: #0c0e11;
+  --color-obsidian-800: #111417;
+  --color-obsidian-700: #171a1e;
+  --color-obsidian-600: #1d2024;
+  --color-obsidian-500: #23262b;
 }
+
