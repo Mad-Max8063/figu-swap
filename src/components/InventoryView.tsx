@@ -35,11 +35,23 @@ export default function InventoryView({
 
   // Helper to resolve player position image
   const getStickerImage = (sticker: Sticker) => {
-    const isArgentinianSpecial = [
-      'ARG-1', 'ARG-2', 'ARG-3', 'ARG-4', 'ARG-5', 
-      'ARG-8', 'ARG-9', 'ARG-10', 'ARG-11', 'ARG-16', 'ARG-20'
-    ].includes(sticker.id);
-    if (isArgentinianSpecial) {
+    const generatedStickers = [
+      // Argentina (Safe Regenerated)
+      'ARG-2', 'ARG-3', 'ARG-4', 'ARG-5', 'ARG-17',
+      // Brasil
+      'BRA-14',
+      // Francia
+      'FRA-20',
+      // España
+      'ESP-15', 'ESP-11',
+      // Alemania
+      'GER-15', 'GER-11',
+      // Uruguay
+      'URU-10', 'URU-17',
+      // Especiales
+      'CC-10', 'FWC-1', 'FWC-2'
+    ];
+    if (generatedStickers.includes(sticker.id)) {
       return `/stickers/${sticker.id}.png`;
     }
 
@@ -221,7 +233,7 @@ export default function InventoryView({
       {/* Real-time Global Progress Bar */}
       <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl shadow-md space-y-2">
         <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-neutral-300 uppercase tracking-wider">Mi Álbum FiguMatch</span>
+          <span className="text-neutral-300 uppercase tracking-wider">Mi Álbum FiguScan</span>
           <span className="text-brand-500 font-mono">
             {ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length} / {ALL_STICKERS.length} pegadas ({Math.round((ALL_STICKERS.filter(s => stickerStates[s.id] === 'tengo' || stickerStates[s.id] === 'repetida').length / ALL_STICKERS.length) * 100) || 0}%)
           </span>

@@ -451,7 +451,7 @@ export default function UserProfileView({
             Max <span className="text-emerald-400 font-medium">(MaxDevs Solutions)</span>
           </h3>
           <p className="text-[11px] text-neutral-400 leading-relaxed max-w-sm mx-auto">
-            FiguMatch Argentina es un proyecto 100% gratuito y libre de publicidad. Si te ayudó a completar tu álbum, podés apoyar a su creador con una donación voluntaria para financiar futuros desarrollos independientes.
+            FiguScan Argentina es un proyecto 100% gratuito y libre de publicidad. Si te ayudó a completar tu álbum, podés apoyar a su creador con una donación voluntaria para financiar futuros desarrollos independientes.
           </p>
         </div>
 

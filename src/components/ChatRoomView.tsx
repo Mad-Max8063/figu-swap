@@ -293,7 +293,7 @@ export default function ChatRoomView({
                         <rect x="70" y="80" width="20" height="10" fill="currentColor" />
                         <rect x="45" y="85" width="20" height="15" fill="currentColor" />
                       </svg>
-                      <span className="text-[8px] font-mono text-neutral-900 block mt-1.5 font-bold">FiguMatch-{currentUser.uid}</span>
+                      <span className="text-[8px] font-mono text-neutral-900 block mt-1.5 font-bold">FiguScan-{currentUser.uid}</span>
                     </div>
                   ) : (
                     <button

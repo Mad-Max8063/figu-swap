@@ -288,7 +288,7 @@ app.post('/api/gemini/filter-chat', async (req, res) => {
     }
 
     const ai = getAi();
-    const systemPrompt = `You are an Argentine cybersecurity intelligence scanner protecting World Cup sticker collectors on our swap platform "FiguMatch Argentina".
+    const systemPrompt = `You are an Argentine cybersecurity intelligence scanner protecting World Cup sticker collectors on our swap platform "FiguScan Argentina".
     Analyse the incoming chat message to prevent physical scam, digital wallet robbery, advance money payment fraud, or phishing traps.
     Detect and flag (flagged: true) with a Spanish warning alert (flaggedReason) if:
     1. The message requests bank transfer, CVU/CBU exchange, deposit prepayments, digital wallet advances (MercadoPago, Brubank, Western Union etc.), selling the stickers instead of direct swaps, or money upfront ("pagame un adelanto", "te pido seña", "te lo vendo a...").
@@ -345,7 +345,7 @@ async function startServer() {
   }
 
   app.listen(ROOT_PORT, '0.0.0.0', () => {
-    console.log(`FiguMatch Argentina listening at http://0.0.0.0:${ROOT_PORT}`);
+    console.log(`FiguScan Argentina listening at http://0.0.0.0:${ROOT_PORT}`);
   });
 }
 

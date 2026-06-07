@@ -818,7 +818,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-100 flex items-center justify-center gap-1">
-                <span>FiguMatch</span>
+                <span>FiguScan</span>
                 <span className="text-brand-500 text-xs py-0.5 px-2 bg-brand-500/10 border border-brand-500/20 rounded-full font-mono font-bold tracking-widest leading-none">AR</span>
               </h1>
               <p className="text-[10px] text-brand-500 font-semibold tracking-widest font-mono uppercase">Intercambio de figuritas del Mundial</p>
@@ -934,10 +934,10 @@ export default function App() {
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             <div className="p-1 px-1.5 bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg text-neutral-900 font-black tracking-tighter text-sm flex items-center gap-0.5 shadow-md shadow-brand-500/10">
-              <span>F</span><span className="text-neutral-900 text-xs">M</span>
+              <span>F</span><span className="text-neutral-900 text-xs">S</span>
             </div>
             <div>
-              <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguMatch</span>
+              <span className="text-xs font-black tracking-tight text-neutral-100 uppercase block">FiguScan</span>
               <span className="text-[9px] text-brand-500 tracking-wider font-mono uppercase block">Argentina 🇦🇷</span>
             </div>
           </div>
