@@ -57,3 +57,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ steps.format_dir.outputs.formatted_dir }}
           local-dir: ./deploy_dir/
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
+          port: ${{ secrets.FTP_PORT || 21 }}
