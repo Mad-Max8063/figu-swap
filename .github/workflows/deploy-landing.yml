@@ -38,12 +38,22 @@ jobs:
           mv landing_page_hostinger.html deploy_dir/index.html
           if [ -f favicon.ico ]; then cp favicon.ico deploy_dir/; fi
 
+      - name: Format Server Directory
+        id: format_dir
+        run: |
+          DIR="${{ secrets.FTP_REMOTE_DIR }}"
+          if [ -z "$DIR" ]; then
+            DIR="./"
+          elif [[ ! "$DIR" =~ /$ ]]; then
+            DIR="$DIR/"
+          fi
+          echo "formatted_dir=$DIR" >> $GITHUB_OUTPUT
+
       - name: Upload index.html to Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          server-dir: ${{ steps.format_dir.outputs.formatted_dir }}
           local-dir: ./deploy_dir/
-          dangerous-clean-html: false
