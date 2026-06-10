@@ -1,0 +1,49 @@
+name: Deploy Landing Page to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'landing_page_hostinger.html'
+      - 'landing_output.css'
+      - 'build_landing.js'
+      - '.github/workflows/deploy-landing.yml'
+
+jobs:
+  deploy:
+    name: Build & Deploy to Hostinger
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Assets & Compile Landing Page
+        run: |
+          npm run build
+          node build_landing.js
+
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir deploy_dir
+          mv landing_page_hostinger.html deploy_dir/index.html
+          if [ -f favicon.ico ]; then cp favicon.ico deploy_dir/; fi
+
+      - name: Upload index.html to Hostinger
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          local-dir: ./deploy_dir/
+          dangerous-clean-html: false
