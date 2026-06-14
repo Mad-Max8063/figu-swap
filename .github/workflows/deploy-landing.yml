@@ -8,6 +8,8 @@ on:
       - 'landing_page_hostinger.html'
       - 'landing_output.css'
       - 'build_landing.js'
+      - 'terminos.html'
+      - 'privacidad.html'
       - '.github/workflows/deploy-landing.yml'
 
 jobs:
@@ -37,6 +39,8 @@ jobs:
           mkdir deploy_dir
           mv landing_page_hostinger.html deploy_dir/index.html
           if [ -f favicon.ico ]; then cp favicon.ico deploy_dir/; fi
+          if [ -f terminos.html ]; then cp terminos.html deploy_dir/; fi
+          if [ -f privacidad.html ]; then cp privacidad.html deploy_dir/; fi
 
       - name: Format Server Directory
         id: format_dir

@@ -35,6 +35,8 @@ service cloud.firestore {
         && data.verified is bool
         && data.bio is string && data.bio.size() <= 1000
         && data.reviewsCount is number && data.reviewsCount >= 0
+        && (!('birthDate' in data) || (data.birthDate is string && data.birthDate.size() <= 10))
+        && (!('ageVerified' in data) || data.ageVerified is bool)
         && (!('isMinor' in data) || data.isMinor is bool)
         && (!('tutorEmail' in data) || data.tutorEmail is string)
         && (!('isDemoMode' in data) || data.isDemoMode is bool)
@@ -80,15 +82,25 @@ service cloud.firestore {
 
     // Rules for each collection
     match /users/{uid} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-      allow create: if isEmailVerified() && isOwner(uid) && isValidUserProfile(request.resource.data) && request.resource.data.verified == false && request.resource.data.reputation == 5.0;
+      // Solo el dueño lee su propio perfil completo (contiene email, birthDate, securityPin).
+      // La app NO enumera perfiles: los datos públicos de otros vienen embebidos en matches/chats.
+      allow get: if isOwner(uid);
+      // 'list' deshabilitado: evitaba el scraping masivo de toda la base de usuarios.
+      // El alta exige verificación de edad (+18): ageVerified == true y birthDate presente.
+      allow create: if isEmailVerified() && isOwner(uid) && isValidUserProfile(request.resource.data)
+        && request.resource.data.verified == false && request.resource.data.reputation == 5.0
+        && request.resource.data.ageVerified == true
+        && request.resource.data.birthDate is string && request.resource.data.birthDate.size() >= 8;
       allow update: if isEmailVerified() && isOwner(uid) && isValidUserProfile(request.resource.data) && (
         request.resource.data.verified == resource.data.verified &&
         request.resource.data.reputation == resource.data.reputation &&
         request.resource.data.email == resource.data.email &&
         request.resource.data.uid == resource.data.uid
-      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isMinor', 'tutorEmail', 'tutorVerified', 'isDemoMode', 'securityPin']);
+      )
+      // birthDate inmutable una vez seteado; ageVerified nunca puede revertirse a false.
+      && (!('birthDate' in resource.data) || request.resource.data.birthDate == resource.data.birthDate)
+      && (!(resource.data.ageVerified == true) || request.resource.data.ageVerified == true)
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isDemoMode', 'securityPin', 'birthDate', 'ageVerified']);
       allow delete: if false; // Profiles are immortal
     }
 

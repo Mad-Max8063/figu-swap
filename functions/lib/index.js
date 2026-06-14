@@ -127,7 +127,7 @@ Look for text pattern or flags inside the sticker sheets. Extract them as a list
 Return a clean list of stickers identified in the specified JSON format.`,
         };
         const response = await ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-2.0-flash',
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: 'application/json',
@@ -240,7 +240,7 @@ app.post('/api/gemini/scan-checklist', async (req, res) => {
       Return a tidy JSON object mapping each identified sticker code/id to its detected status. Give some brief summary notes explaining what you saw.`,
         };
         const response = await ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-2.0-flash',
             contents: { parts: [imagePart, textPart] },
             config: {
                 responseMimeType: 'application/json',
@@ -307,7 +307,7 @@ app.post('/api/gemini/filter-chat', async (req, res) => {
             return res.json({ flagged, flaggedReason, mode: 'MOCK_FALLBACK' });
         }
         const ai = getAi();
-        const systemPrompt = `You are an Argentine cybersecurity intelligence scanner protecting World Cup sticker collectors on our swap platform "FiguSwap Argentina".
+        const systemPrompt = `You are an Argentine cybersecurity intelligence scanner protecting World Cup sticker collectors on our swap platform "FiguScan Argentina".
     Analyse the incoming chat message to prevent physical scam, digital wallet robbery, advance money payment fraud, or phishing traps.
     Detect and flag (flagged: true) with a Spanish warning alert (flaggedReason) if:
     1. The message requests bank transfer, CVU/CBU exchange, deposit prepayments, digital wallet advances (MercadoPago, Brubank, Western Union etc.), selling the stickers instead of direct swaps, or money upfront ("pagame un adelanto", "te pido seña", "te lo vendo a...").
@@ -316,7 +316,7 @@ app.post('/api/gemini/filter-chat', async (req, res) => {
     
     If the text is fine, set flagged: false, flaggedReason: "". Keep warning alerts highly impactful, informative, direct, in Argentine-friendly context, reminding users that swaps must be free and physical only inside predetermined SAFE municipal zones.`;
         const response = await ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-2.0-flash',
             contents: text,
             config: {
                 systemInstruction: systemPrompt,

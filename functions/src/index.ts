@@ -97,7 +97,7 @@ Return a clean list of stickers identified in the specified JSON format.`,
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.0-flash',
       contents: { parts: [imagePart, textPart] },
       config: {
         responseMimeType: 'application/json',
@@ -216,7 +216,7 @@ app.post('/api/gemini/scan-checklist', async (req: any, res: any) => {
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.0-flash',
       contents: { parts: [imagePart, textPart] },
       config: {
         responseMimeType: 'application/json',
@@ -297,7 +297,7 @@ app.post('/api/gemini/filter-chat', async (req: any, res: any) => {
     If the text is fine, set flagged: false, flaggedReason: "". Keep warning alerts highly impactful, informative, direct, in Argentine-friendly context, reminding users that swaps must be free and physical only inside predetermined SAFE municipal zones.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-2.0-flash',
       contents: text,
       config: {
         systemInstruction: systemPrompt,

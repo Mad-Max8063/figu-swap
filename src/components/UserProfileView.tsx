@@ -8,7 +8,6 @@ interface UserProfileViewProps {
   onUpdateBio: (bio: string) => void;
   onUpdateName: (name: string) => void;
   onTogglePrivateMode: (enabled: boolean) => void;
-  onUpdateTutorInfo?: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
   onResetDemo?: () => Promise<void>;
   onClearAlbum?: () => Promise<void>;
   onUpdateSecurityPin?: (pin: string) => Promise<void>;
@@ -19,9 +18,8 @@ export default function UserProfileView({
   onChangeUserCity, 
   onUpdateBio, 
   onUpdateName, 
-  onTogglePrivateMode, 
-  onUpdateTutorInfo, 
-  onResetDemo, 
+  onTogglePrivateMode,
+  onResetDemo,
   onClearAlbum,
   onUpdateSecurityPin
 }: UserProfileViewProps) {
@@ -29,12 +27,6 @@ export default function UserProfileView({
   const [editedName, setEditedName] = useState(user.displayName);
   const [editedBio, setEditedBio] = useState(user.bio);
   const [editedCity, setEditedCity] = useState<CityLocation>(user.city);
-  const [isMinor, setIsMinor] = useState(user.isMinor || false);
-  const [tutorEmail, setTutorEmail] = useState(user.tutorEmail || '');
-
-  // PIN states for tutor authentication
-  const [pinInput, setPinInput] = useState('');
-  const [showPinError, setShowPinError] = useState(false);
 
   // Security action PIN states (for reset and clear album)
   const [showPinModalForAction, setShowPinModalForAction] = useState<'reset' | 'clear' | null>(null);
@@ -48,38 +40,27 @@ export default function UserProfileView({
   const [pinChangeError, setPinChangeError] = useState(false);
   const [isChangingPin, setIsChangingPin] = useState(false);
 
-  const verifyTutorPin = () => {
-    if (pinInput === '1234') {
-      setShowPinError(false);
-      if (onUpdateTutorInfo) {
-        onUpdateTutorInfo(true, user.tutorEmail || tutorEmail, true);
-      }
-    } else {
-      setShowPinError(true);
-    }
-  };
-
   const handleActionWithPin = async () => {
-    const requiredPin = user.securityPin || '1234';
-    if (securityPinInput === requiredPin) {
-      setSecurityPinError(false);
-      setActionInProgress(true);
-      const action = showPinModalForAction;
-      try {
-        if (action === 'clear' && onClearAlbum) {
-          await onClearAlbum();
-        } else if (action === 'reset' && onResetDemo) {
-          await onResetDemo();
-        }
-        setShowPinModalForAction(null);
-        setSecurityPinInput('');
-      } catch (err) {
-        console.error("Action error:", err);
-      } finally {
-        setActionInProgress(false);
-      }
-    } else {
+    // Si el usuario configuró un PIN propio, se exige; si no, la acción se confirma directo.
+    if (user.securityPin && securityPinInput !== user.securityPin) {
       setSecurityPinError(true);
+      return;
+    }
+    setSecurityPinError(false);
+    setActionInProgress(true);
+    const action = showPinModalForAction;
+    try {
+      if (action === 'clear' && onClearAlbum) {
+        await onClearAlbum();
+      } else if (action === 'reset' && onResetDemo) {
+        await onResetDemo();
+      }
+      setShowPinModalForAction(null);
+      setSecurityPinInput('');
+    } catch (err) {
+      console.error("Action error:", err);
+    } finally {
+      setActionInProgress(false);
     }
   };
 
@@ -111,9 +92,6 @@ export default function UserProfileView({
     onUpdateName(editedName);
     onUpdateBio(editedBio);
     onChangeUserCity(editedCity);
-    if (onUpdateTutorInfo) {
-      onUpdateTutorInfo(isMinor, tutorEmail, isMinor ? user.tutorVerified : false);
-    }
     setIsEditing(false);
   };
 
@@ -175,52 +153,6 @@ export default function UserProfileView({
           <span className="text-[10px] text-neutral-400">({user.reviewsCount} canjes)</span>
         </div>
 
-        {/* Tutor Verification Status */}
-        {user.isMinor && (
-          <div className="mt-3 w-full max-w-xs">
-            {user.tutorVerified ? (
-              <div className="bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 py-1.5 px-3 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-[inset_0_0_8px_rgba(16,185,129,0.06)] animate-fade-in">
-                <Shield className="h-3.5 w-3.5" />
-                <span>TUTOR VERIFICADO: {user.tutorEmail}</span>
-              </div>
-            ) : (
-              <div className="bg-amber-550/5 border border-amber-500/25 text-amber-300 py-2.5 px-3 rounded-xl text-[10px] space-y-2 animate-pulse shadow-md">
-                <div className="font-bold flex items-center justify-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-amber-500 animate-bounce" />
-                  <span>TUTOR PENDIENTE: {user.tutorEmail || 'Sin correo registrado'}</span>
-                </div>
-                {user.tutorEmail ? (
-                  <div className="space-y-1.5">
-                    <p className="text-[9px] text-neutral-400 leading-snug">Ingresá el PIN de 4 dígitos enviado a tu tutor para habilitar la app.</p>
-                    <div className="flex gap-1.5 justify-center">
-                      <input
-                        type="text"
-                        maxLength={4}
-                        placeholder="PIN"
-                        value={pinInput}
-                        onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
-                        className="bg-neutral-950 border border-neutral-800 rounded px-2.5 py-1 text-center font-bold tracking-widest text-[11px] outline-none w-20 text-neutral-200 focus:border-amber-500/40"
-                      />
-                      <button
-                        onClick={verifyTutorPin}
-                        className="bg-amber-500 hover:bg-amber-600 text-neutral-950 px-3 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
-                      >
-                        Validar
-                      </button>
-                    </div>
-                    {showPinError && (
-                      <span className="text-[9px] text-rose-450 block font-semibold">PIN incorrecto. Intenta con "1234".</span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-[9px] text-neutral-500 leading-snug">Marcá tu perfil como editable arriba y colocá el correo de tu tutor.</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-
         {/* Bio */}
         <p className="text-xs text-neutral-300 mt-3.5 max-w-sm leading-relaxed italic">
           "{user.bio}"
@@ -260,33 +192,6 @@ export default function UserProfileView({
                 rows={2}
                 className="w-full bg-neutral-950 border border-neutral-800 focus:border-emerald-500 rounded-lg p-2 text-xs text-neutral-200 outline-none resize-none"
               />
-            </div>
-
-            {/* Control de Menores (Tutor) */}
-            <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-850 space-y-2.5">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-300">
-                <input
-                  type="checkbox"
-                  checked={isMinor}
-                  onChange={(e) => setIsMinor(e.target.checked)}
-                  className="rounded border-neutral-800 text-emerald-500 focus:ring-emerald-500 bg-neutral-900 h-4 w-4"
-                />
-                <span>Soy menor de edad (requiere tutor) 🛡️</span>
-              </label>
-
-              {isMinor && (
-                <div className="animate-fade-in space-y-1">
-                  <label className="block text-[9px] text-neutral-400 font-bold uppercase">Email de mi Adulto Responsable (Tutor)</label>
-                  <input
-                    type="email"
-                    placeholder="ej: tutor.mama.papa@gmail.com"
-                    value={tutorEmail}
-                    onChange={(e) => setTutorEmail(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-800 focus:border-emerald-500 rounded-lg p-2 text-xs text-neutral-200 outline-none"
-                  />
-                  <span className="text-[8px] text-neutral-500 block leading-snug">Se le enviará un código temporal de autorización para validar su cuenta.</span>
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -525,7 +430,7 @@ export default function UserProfileView({
                   <span>PIN de Seguridad del Álbum</span>
                 </div>
                 <span className="text-[9px] font-mono bg-neutral-950 text-neutral-450 border border-neutral-800 px-2 py-0.5 rounded-md">
-                  PIN actual: {user.securityPin ? '•••• (Personalizado)' : '1234 (Por defecto)'}
+                  PIN actual: {user.securityPin ? '•••• (Personalizado)' : 'Sin configurar'}
                 </span>
               </div>
               <p className="text-[10px] text-neutral-400 leading-normal">
@@ -576,30 +481,34 @@ export default function UserProfileView({
             <div className="space-y-1.5">
               <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-wide">Confirmación de Seguridad</h3>
               <p className="text-[11px] text-neutral-400 leading-relaxed">
-                Para evitar borrados accidentales de tu progreso, ingresá tu PIN de autorización de 4 números {user.securityPin ? '' : '(por defecto: '}<b className="text-neutral-200">{user.securityPin ? 'personalizado' : '1234'}</b>{user.securityPin ? '' : ')'}:
+                {user.securityPin
+                  ? 'Para evitar borrados accidentales de tu progreso, ingresá tu PIN de seguridad de 4 dígitos:'
+                  : 'Esta acción es irreversible y borrará tu progreso. ¿Querés continuar?'}
               </p>
             </div>
 
             <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3">
               <div className="flex gap-2 justify-center items-center">
-                <input
-                  type="password"
-                  maxLength={4}
-                  placeholder="PIN"
-                  value={securityPinInput}
-                  onChange={(e) => setSecurityPinInput(e.target.value.replace(/\D/g, ''))}
-                  disabled={actionInProgress}
-                  className="bg-neutral-900 border border-neutral-800 rounded-lg py-2 px-3 text-center font-bold tracking-widest text-sm outline-none w-24 text-neutral-200 focus:border-rose-500/40 disabled:opacity-50"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleActionWithPin();
-                  }}
-                />
+                {user.securityPin && (
+                  <input
+                    type="password"
+                    maxLength={4}
+                    placeholder="PIN"
+                    value={securityPinInput}
+                    onChange={(e) => setSecurityPinInput(e.target.value.replace(/\D/g, ''))}
+                    disabled={actionInProgress}
+                    className="bg-neutral-900 border border-neutral-800 rounded-lg py-2 px-3 text-center font-bold tracking-widest text-sm outline-none w-24 text-neutral-200 focus:border-rose-500/40 disabled:opacity-50"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleActionWithPin();
+                    }}
+                  />
+                )}
                 <button
                   onClick={handleActionWithPin}
                   disabled={actionInProgress}
                   className="bg-rose-500 hover:bg-rose-600 disabled:bg-neutral-850 disabled:text-neutral-500 active:scale-95 text-neutral-950 px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer"
                 >
-                  {actionInProgress ? "Procesando..." : "Autorizar"}
+                  {actionInProgress ? "Procesando..." : (user.securityPin ? "Autorizar" : "Sí, borrar")}
                 </button>
               </div>
               {securityPinError && (

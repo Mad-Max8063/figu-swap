@@ -6,7 +6,7 @@ import SafeZonesMap from './components/SafeZonesMap';
 import ChatRoomView from './components/ChatRoomView';
 import { MOCK_COLLECTORS } from './data';
 import { UserProfile, StickerStatus, SwapMatch, ChatRoom, ChatMessage, CityLocation, Sticker } from './types';
-import { Shield, Sparkles, MessageSquare, Award, Star, RefreshCw, Key, LogOut, Lock } from 'lucide-react';
+import { Shield, Sparkles, MessageSquare, Award, Star, RefreshCw, Key, LogOut } from 'lucide-react';
 import { 
   auth, 
   db, 
@@ -26,7 +26,6 @@ import {
   onSnapshot,
   User
 } from './firebase';
-import { signInAnonymously } from 'firebase/auth';
 import { deleteDoc } from 'firebase/firestore';
 
 export enum OperationType {
@@ -87,13 +86,17 @@ export default function App() {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [openedRoomId, setOpenedRoomId] = useState<string | null>(null);
 
-  // Lockscreen states for unverified minors
-  const [lockscreenPin, setLockscreenPin] = useState('');
-  const [lockscreenError, setLockscreenError] = useState(false);
+  // Age gate (+18) states
+  const [ageGateRequired, setAgeGateRequired] = useState(false);
+  const [profileExists, setProfileExists] = useState(false);
+  const [birthDateInput, setBirthDateInput] = useState('');
+  const [ageError, setAgeError] = useState('');
+  const [ageRejected, setAgeRejected] = useState(false);
+  const [ageSubmitting, setAgeSubmitting] = useState(false);
 
 
   // Seeding helper to pre-fill active profiles, sticker vectors & chat history instantly
-  const seedUserCollections = async (uid: string, email: string, displayName: string, photoURL?: string | null) => {
+  const seedUserCollections = async (uid: string, email: string, displayName: string, photoURL?: string | null, birthDate?: string) => {
     // 1. Seed user profile
     const userProfile: UserProfile = {
       uid,
@@ -109,6 +112,8 @@ export default function App() {
         { id: 'r-user-1', reviewerName: 'Carlos Gómez', rating: 5, comment: 'Excelente canje, completó rápido su parte.', date: '2026-05-24' }
       ],
       isDemoMode: true,
+      birthDate: birthDate || '',
+      ageVerified: true,
       stickerCounts: { tengo: 642, falta: 300, repetida: 52 },
       photoURL: photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop'
     };
@@ -196,12 +201,17 @@ export default function App() {
           const userSnap = await getDoc(userDocRef);
 
           if (userSnap.exists()) {
-            setCurrentUser(userSnap.data() as UserProfile);
+            const data = userSnap.data() as UserProfile;
+            setCurrentUser(data);
+            // Perfil existente sin verificación de edad (legado/demo): exigir age gate.
+            if (!data.ageVerified) {
+              setProfileExists(true);
+              setAgeGateRequired(true);
+            }
           } else {
-            // New user registration - seed default profile
-            await seedUserCollections(user.uid, user.email || 'M.Bernal8036@gmail.com', user.displayName || 'Marcos Bernal (Tú)', user.photoURL);
-            const newSnap = await getDoc(userDocRef);
-            setCurrentUser(newSnap.data() as UserProfile);
+            // Usuario nuevo: NO se crea el perfil hasta verificar mayoría de edad (+18).
+            setProfileExists(false);
+            setAgeGateRequired(true);
           }
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
@@ -330,19 +340,69 @@ export default function App() {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      console.error("Popup identity failed. Triggering demo fallback.");
-      // Fallback in case of strict iframe popup blocking policies
-      await handleFastPassSignIn();
+      console.error("Google sign-in failed:", err);
+      alert('No se pudo iniciar sesión con Google. Probá de nuevo o revisá los bloqueadores de pop-ups.');
     }
   };
 
-  const handleFastPassSignIn = async () => {
-    setAuthLoading(true);
-    try {
-      await signInAnonymously(auth);
-    } catch (err) {
-      console.error(err);
+  // Calcula la edad en años a partir de una fecha ISO (YYYY-MM-DD)
+  const calcAge = (isoDate: string): number => {
+    const birth = new Date(isoDate);
+    if (isNaN(birth.getTime())) return NaN;
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const monthDiff = now.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
+  const handleConfirmAge = async () => {
+    setAgeError('');
+    if (!birthDateInput) {
+      setAgeError('Ingresá tu fecha de nacimiento.');
+      return;
     }
+    const age = calcAge(birthDateInput);
+    if (isNaN(age) || age < 0 || age > 120) {
+      setAgeError('La fecha de nacimiento no es válida.');
+      return;
+    }
+    if (age < 18) {
+      // FiguScan es solo para mayores de 18. Se rechaza y se cierra la sesión.
+      setAgeRejected(true);
+      return;
+    }
+    const user = auth.currentUser;
+    if (!user) return;
+    setAgeSubmitting(true);
+    try {
+      if (profileExists) {
+        await updateDoc(doc(db, 'users', user.uid), { birthDate: birthDateInput, ageVerified: true });
+      } else {
+        await seedUserCollections(
+          user.uid,
+          user.email || 'M.Bernal8036@gmail.com',
+          user.displayName || 'Marcos Bernal (Tú)',
+          user.photoURL,
+          birthDateInput
+        );
+      }
+      setAgeGateRequired(false);
+      setBirthDateInput('');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}`);
+      setAgeError('Hubo un error al guardar tu verificación. Probá de nuevo.');
+    } finally {
+      setAgeSubmitting(false);
+    }
+  };
+
+  const handleRejectAgeExit = async () => {
+    setAgeRejected(false);
+    setAgeGateRequired(false);
+    setBirthDateInput('');
+    setProfileExists(false);
+    await signOut(auth);
   };
 
   const handleSignOut = async () => {
@@ -601,25 +661,9 @@ export default function App() {
     } catch (err) {
       handleFirestoreError(err, OperationType.CREATE, `users/${otherUid}/reviews/${reviewId}`);
     }
-
-    // Update stats on other user
-    const otherRef = doc(db, 'users', otherUid);
-    try {
-      const otherSnap = await getDoc(otherRef);
-      if (otherSnap.exists()) {
-        const data = otherSnap.data() as UserProfile;
-        const newCount = data.reviewsCount + 1;
-        const newRep = (data.reputation * data.reviewsCount + rating) / newCount;
-        await updateDoc(otherRef, {
-          reputation: newRep,
-          reviewsCount: newCount
-        });
-      }
-    } catch (err) {
-      // Direct write of companion's fields is restricted under security rules uids logic!
-      // This is expected and we swallow the warning to guarantee reviews can still be posted
-      console.warn(`Direct updating counterpart profile fields (uid: ${otherUid}) is blocked, swallowed as expected.`);
-    }
+    // Nota: el recálculo de reputación del otro usuario debe hacerse server-side
+    // (Cloud Function sobre la subcolección reviews). No se puede ni se debe escribir
+    // el perfil ajeno desde el cliente. Pendiente para v2.
   };
 
   // Profile fields changes
@@ -657,19 +701,6 @@ export default function App() {
       if (enabled) {
         setActiveTab('inventory');
       }
-    } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
-    }
-  };
-
-  const handleUpdateTutorInfo = async (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => {
-    if (!isAuthenticated || !auth.currentUser) return;
-    try {
-      const updates: any = { isMinor, tutorEmail };
-      if (tutorVerified !== undefined) {
-        updates.tutorVerified = tutorVerified;
-      }
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), updates);
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
     }
@@ -803,6 +834,67 @@ export default function App() {
     );
   }
 
+  // Age gate (+18): se exige antes de crear/activar el perfil
+  if (isAuthenticated && ageGateRequired) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col justify-center items-center p-6 antialiased" id="age-gate">
+        <div className="max-w-sm w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-8 space-y-6 shadow-2xl">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/25 text-amber-400">
+              <Shield className="h-7 w-7" />
+            </div>
+            <h1 className="text-lg font-black uppercase tracking-tight text-neutral-100">Verificación de edad</h1>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              FiguScan es una plataforma de canje entre personas con coordinación de encuentros físicos, <b className="text-neutral-200">exclusiva para mayores de 18 años</b>. Necesitamos confirmar tu fecha de nacimiento.
+            </p>
+          </div>
+
+          {ageRejected ? (
+            <div className="space-y-4 text-center">
+              <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl p-4">
+                <p className="text-xs text-rose-300 font-semibold leading-relaxed">
+                  Lo sentimos, FiguScan es solo para mayores de 18 años. No podemos habilitar tu cuenta.
+                </p>
+              </div>
+              <button
+                onClick={handleRejectAgeExit}
+                className="w-full bg-neutral-950 hover:bg-neutral-800 text-neutral-300 font-semibold border border-neutral-800 text-xs py-2.5 px-4 rounded-xl transition-all cursor-pointer"
+              >
+                Entendido, salir
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Fecha de nacimiento</label>
+                <input
+                  type="date"
+                  value={birthDateInput}
+                  max={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => { setBirthDateInput(e.target.value); setAgeError(''); }}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-2.5 px-3 text-sm text-neutral-200 outline-none focus:border-brand-500/50"
+                />
+              </div>
+              {ageError && (
+                <span className="text-[10px] text-rose-400 block font-semibold">{ageError}</span>
+              )}
+              <button
+                onClick={handleConfirmAge}
+                disabled={ageSubmitting}
+                className="w-full bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-500 active:scale-[0.98] text-neutral-950 font-black text-xs py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-brand-500/10 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {ageSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <span>Confirmar y continuar</span>}
+              </button>
+              <p className="text-[8px] text-neutral-550 leading-relaxed text-center">
+                Al continuar declarás que la información es verídica y aceptás los Términos y Condiciones y la Política de Privacidad.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || !currentUser) {
     // Elegant Authentication Lobby Gate View
     return (
@@ -852,73 +944,20 @@ export default function App() {
               <Key className="h-4.5 w-4.5" />
               <span>Ingresar con Google Account</span>
             </button>
-
-            <button
-              onClick={handleFastPassSignIn}
-              className="w-full bg-neutral-950 hover:bg-neutral-800 active:scale-[0.98] text-neutral-300 font-semibold border border-neutral-800 text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <span>Ingreso Rápido (Evaluar Aplicación)</span>
-            </button>
           </div>
 
-          <div className="text-center">
-            <span className="text-[9px] text-neutral-550 flex items-center justify-center gap-1 uppercase tracking-widest">
-              <Shield className="h-3 w-3" /> Base de Datos y Auth Sincronizados
+          <div className="text-center space-y-1.5">
+            <span className="text-[9px] text-amber-400 font-bold flex items-center justify-center gap-1 uppercase tracking-widest">
+              <Shield className="h-3 w-3" /> Plataforma exclusiva para mayores de 18 años
             </span>
+            <p className="text-[8px] text-neutral-550 leading-relaxed px-2">
+              Al ingresar aceptás los Términos y Condiciones y la Política de Privacidad. Te pediremos confirmar tu edad.
+            </p>
           </div>
         </div>
       </div>
     );
   }
-
-  const renderMinorBlockedScreen = () => {
-    return (
-      <div className="bg-neutral-900 border border-amber-500/25 rounded-3xl p-6 text-center space-y-5 shadow-xl max-w-sm mx-auto animate-fade-in" id="minor-safety-lockscreen">
-        <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto border border-amber-500/25 text-amber-400">
-          <Lock className="h-6 w-6 animate-pulse" />
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-wide">Acceso Restringido por Seguridad</h3>
-          <p className="text-[11px] text-neutral-400 leading-relaxed">
-            Como menor de edad, requerís la validación activa de tu adulto responsable. Las interacciones sociales (Matcher y Chats) están suspendidas hasta verificar tu tutor.
-          </p>
-        </div>
-        <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 space-y-3">
-          <span className="text-[9px] text-amber-400 font-bold uppercase block tracking-wider">Ingresar PIN del Tutor</span>
-          <p className="text-[9px] text-neutral-500 leading-normal">
-            Pedile a tu tutor el PIN de 4 dígitos enviado a su correo <b className="text-neutral-350">{currentUser?.tutorEmail || 'sin correo registrado'}</b> e ingresalo abajo:
-          </p>
-          <div className="flex gap-1.5 justify-center items-center">
-            <input
-              type="text"
-              maxLength={4}
-              placeholder="PIN"
-              value={lockscreenPin}
-              onChange={(e) => setLockscreenPin(e.target.value.replace(/\D/g, ''))}
-              className="bg-neutral-900 border border-neutral-800 rounded-lg py-1 px-2.5 text-center font-bold tracking-widest text-xs outline-none w-20 text-neutral-200 focus:border-amber-500/40"
-            />
-            <button
-              onClick={() => {
-                if (lockscreenPin === '1234') {
-                  setLockscreenError(false);
-                  handleUpdateTutorInfo(true, currentUser?.tutorEmail || '', true);
-                } else {
-                  setLockscreenError(true);
-                }
-              }}
-              className="bg-amber-500 hover:bg-amber-600 text-neutral-950 px-3.5 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
-            >
-              Validar
-            </button>
-          </div>
-          {lockscreenError && (
-            <span className="text-[9px] text-rose-450 block font-semibold">PIN incorrecto. Intenta con "1234".</span>
-          )}
-          <p className="text-[8px] text-neutral-500 italic">Podés cambiar el correo de tutor desde la pestaña "Mi Perfil".</p>
-        </div>
-      </div>
-    );
-  };
 
   const openedRoom = chatRooms.find(r => r.id === openedRoomId);
 
@@ -977,9 +1016,7 @@ export default function App() {
 
       {/* Main Core Router Panels */}
       <main className="flex-1 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 pt-3 pb-24 overflow-y-auto overflow-x-hidden">
-        {currentUser.isMinor && !currentUser.tutorVerified && (activeTab === 'swap' || activeTab === 'chats') ? (
-          renderMinorBlockedScreen()
-        ) : openedRoomId && activeTab === 'chats' && openedRoom ? (
+        {openedRoomId && activeTab === 'chats' && openedRoom ? (
           <ChatRoomView
             room={openedRoom}
             currentUser={currentUser}
@@ -1090,7 +1127,6 @@ export default function App() {
                 handleUpdateBio={handleUpdateBio}
                 handleUpdateName={handleUpdateName}
                 handleTogglePrivateMode={handleTogglePrivateMode}
-                handleUpdateTutorInfo={handleUpdateTutorInfo}
                 onResetDemo={handleResetDemo}
                 onClearAlbum={handleClearAlbumReal}
                 onUpdateSecurityPin={handleUpdateSecurityPin}
@@ -1132,17 +1168,15 @@ function InventoryViewPropsWrapper({
   handleUpdateBio, 
   handleUpdateName,
   handleTogglePrivateMode,
-  handleUpdateTutorInfo,
   onResetDemo,
   onClearAlbum,
   onUpdateSecurityPin
-}: { 
-  currentUser: UserProfile; 
+}: {
+  currentUser: UserProfile;
   handleChangeUserCity: (city: CityLocation) => void;
   handleUpdateBio: (bio: string) => void;
   handleUpdateName: (name: string) => void;
   handleTogglePrivateMode: (enabled: boolean) => void;
-  handleUpdateTutorInfo: (isMinor: boolean, tutorEmail: string, tutorVerified?: boolean) => void;
   onResetDemo?: () => Promise<void>;
   onClearAlbum?: () => Promise<void>;
   onUpdateSecurityPin?: (pin: string) => Promise<void>;
@@ -1155,7 +1189,6 @@ function InventoryViewPropsWrapper({
       onUpdateBio={handleUpdateBio}
       onUpdateName={handleUpdateName}
       onTogglePrivateMode={handleTogglePrivateMode}
-      onUpdateTutorInfo={handleUpdateTutorInfo}
       onResetDemo={onResetDemo}
       onClearAlbum={onClearAlbum}
       onUpdateSecurityPin={onUpdateSecurityPin}

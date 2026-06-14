@@ -36,11 +36,15 @@ export interface UserProfile {
     repetida: number;
   };
   privateMode?: boolean;
+  // Verificación de edad (FiguScan es +18). birthDate ISO (YYYY-MM-DD), inmutable tras el alta.
+  birthDate?: string;
+  ageVerified?: boolean;
+  isDemoMode?: boolean;
+  securityPin?: string;
+  // DEPRECADOS — flujo de menores reservado para v2. No usar en UI.
   isMinor?: boolean;
   tutorEmail?: string;
   tutorVerified?: boolean;
-  isDemoMode?: boolean;
-  securityPin?: string;
 }
 
 export interface CompactStickerState {
