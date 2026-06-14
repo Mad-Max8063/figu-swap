@@ -16,6 +16,7 @@ export const TEAMS = [
 
 export const STAR_PLAYERS: Record<string, Record<number, string>> = {
   ARG: {
+    1: 'Escudo Argentina ⭐',
     2: 'Emiliano Martínez',
     3: 'Nahuel Molina',
     4: 'Cristian Romero',
@@ -27,6 +28,7 @@ export const STAR_PLAYERS: Record<string, Record<number, string>> = {
     10: 'Rodrigo De Paul',
     11: 'Exequiel Palacios',
     12: 'Leandro Paredes',
+    13: 'Plantel Argentina 📸',
     14: 'Nico Paz',
     15: 'Franco Mastantuono',
     16: 'Nicolás González',
