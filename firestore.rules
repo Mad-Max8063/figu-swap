@@ -99,7 +99,7 @@ service cloud.firestore {
       )
       // birthDate inmutable una vez seteado; ageVerified nunca puede revertirse a false.
       && (!('birthDate' in resource.data) || request.resource.data.birthDate == resource.data.birthDate)
-      && (!(resource.data.ageVerified == true) || request.resource.data.ageVerified == true)
+      && (!('ageVerified' in resource.data) || !(resource.data.ageVerified == true) || request.resource.data.ageVerified == true)
       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'bio', 'city', 'neighborhood', 'stickerCounts', 'privateMode', 'isDemoMode', 'securityPin', 'birthDate', 'ageVerified']);
       allow delete: if false; // Profiles are immortal
     }
