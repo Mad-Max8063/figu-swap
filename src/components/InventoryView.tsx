@@ -73,17 +73,26 @@ export default function InventoryView({
   // Helper to fetch realistic Panini data
   const getPlayerDetails = (stickerId: string) => {
     const defaults: Record<string, { height: string; weight: string; birth: string; position: string }> = {
-      'ARG-1': { height: '1.95 m', weight: '88 kg', birth: '02/09/1992', position: 'Portero Titular' },
-      'ARG-2': { height: '1.75 m', weight: '70 kg', birth: '06/04/1998', position: 'Defensor Titular' },
-      'ARG-3': { height: '1.85 m', weight: '81 kg', birth: '27/04/1998', position: 'Defensor Titular' },
-      'ARG-4': { height: '1.83 m', weight: '81 kg', birth: '12/02/1988', position: 'Defensor Titular' },
-      'ARG-5': { height: '1.72 m', weight: '66 kg', birth: '31/08/1992', position: 'Defensor Titular' },
+      'ARG-1': { height: '-', weight: '-', birth: '21/02/1893', position: 'Escudo Oficial' },
+      'ARG-2': { height: '1.95 m', weight: '88 kg', birth: '02/09/1992', position: 'Portero Titular' },
+      'ARG-3': { height: '1.75 m', weight: '70 kg', birth: '06/04/1998', position: 'Defensor Titular' },
+      'ARG-4': { height: '1.85 m', weight: '79 kg', birth: '27/04/1998', position: 'Defensor Titular' },
+      'ARG-5': { height: '1.83 m', weight: '81 kg', birth: '12/02/1988', position: 'Defensor Titular' },
+      'ARG-6': { height: '1.72 m', weight: '66 kg', birth: '31/08/1992', position: 'Defensor Titular' },
+      'ARG-7': { height: '1.88 m', weight: '80 kg', birth: '26/01/1999', position: 'Defensor Titular' },
       'ARG-8': { height: '1.78 m', weight: '77 kg', birth: '17/01/2001', position: 'Mediocampista Titular' },
-      'ARG-9': { height: '1.70 m', weight: '71 kg', birth: '31/01/2000', position: 'Delantero Titular' },
-      'ARG-10': { height: '1.70 m', weight: '72 kg', birth: '24/06/1987', position: 'Delantero Leyenda' },
-      'ARG-11': { height: '1.78 m', weight: '70 kg', birth: '24/12/1998', position: 'Mediocampista Estrella' },
-      'ARG-16': { height: '1.80 m', weight: '74 kg', birth: '24/05/1994', position: 'Mediocampista Titular' },
-      'ARG-20': { height: '1.74 m', weight: '72 kg', birth: '22/08/1997', position: 'Delantero Titular' }
+      'ARG-9': { height: '1.76 m', weight: '72 kg', birth: '24/12/1998', position: 'Mediocampista Estrella' },
+      'ARG-10': { height: '1.80 m', weight: '74 kg', birth: '24/05/1994', position: 'Mediocampista Titular' },
+      'ARG-11': { height: '1.77 m', weight: '70 kg', birth: '05/10/1998', position: 'Mediocampista Titular' },
+      'ARG-12': { height: '1.80 m', weight: '75 kg', birth: '29/06/1994', position: 'Mediocampista Titular' },
+      'ARG-13': { height: '-', weight: '-', birth: 'Mundial 2026', position: 'Plantel Oficial' },
+      'ARG-14': { height: '1.86 m', weight: '78 kg', birth: '08/09/2004', position: 'Mediocampista Titular' },
+      'ARG-15': { height: '1.77 m', weight: '73 kg', birth: '14/08/2007', position: 'Mediocampista Titular' },
+      'ARG-16': { height: '1.80 m', weight: '74 kg', birth: '06/04/1998', position: 'Delantero Titular' },
+      'ARG-17': { height: '1.70 m', weight: '72 kg', birth: '24/06/1987', position: 'Delantero Leyenda' },
+      'ARG-18': { height: '1.74 m', weight: '72 kg', birth: '22/08/1997', position: 'Delantero Titular' },
+      'ARG-19': { height: '1.70 m', weight: '71 kg', birth: '31/01/2000', position: 'Delantero Titular' },
+      'ARG-20': { height: '1.79 m', weight: '73 kg', birth: '18/12/2002', position: 'Delantero Titular' }
     };
     return defaults[stickerId] || { height: '1.80 m', weight: '75 kg', birth: '15/05/1999', position: 'Jugador Oficial' };
   };
