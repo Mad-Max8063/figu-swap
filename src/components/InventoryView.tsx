@@ -39,7 +39,7 @@ export default function InventoryView({
       // Argentina (Safe Regenerated)
       'ARG-1', 'ARG-2', 'ARG-3', 'ARG-4', 'ARG-5', 'ARG-6', 'ARG-7', 'ARG-8', 'ARG-9', 'ARG-10', 'ARG-11', 'ARG-12', 'ARG-13', 'ARG-14', 'ARG-15', 'ARG-16', 'ARG-17', 'ARG-18', 'ARG-19', 'ARG-20',
       // Brasil
-      'BRA-14',
+      'BRA-1', 'BRA-2', 'BRA-3', 'BRA-4', 'BRA-5', 'BRA-6', 'BRA-7', 'BRA-8', 'BRA-9', 'BRA-10', 'BRA-11', 'BRA-12', 'BRA-13', 'BRA-14', 'BRA-15', 'BRA-16', 'BRA-17', 'BRA-18', 'BRA-19', 'BRA-20',
       // Francia
       'FRA-20',
       // España
@@ -92,7 +92,28 @@ export default function InventoryView({
       'ARG-17': { height: '1.70 m', weight: '72 kg', birth: '24/06/1987', position: 'Delantero Leyenda' },
       'ARG-18': { height: '1.74 m', weight: '72 kg', birth: '22/08/1997', position: 'Delantero Titular' },
       'ARG-19': { height: '1.70 m', weight: '71 kg', birth: '31/01/2000', position: 'Delantero Titular' },
-      'ARG-20': { height: '1.79 m', weight: '73 kg', birth: '18/12/2002', position: 'Delantero Titular' }
+      'ARG-20': { height: '1.79 m', weight: '73 kg', birth: '18/12/2002', position: 'Delantero Titular' },
+      // Brasil
+      'BRA-1': { height: '-', weight: '-', birth: '08/06/1914', position: 'Escudo Oficial' },
+      'BRA-2': { height: '1.93 m', weight: '91 kg', birth: '02/10/1992', position: 'Portero Titular' },
+      'BRA-3': { height: '1.90 m', weight: '85 kg', birth: '10/06/1999', position: 'Portero' },
+      'BRA-4': { height: '1.83 m', weight: '75 kg', birth: '14/05/1994', position: 'Defensor Titular' },
+      'BRA-5': { height: '1.86 m', weight: '78 kg', birth: '18/01/1998', position: 'Defensor Titular' },
+      'BRA-6': { height: '1.90 m', weight: '87 kg', birth: '19/12/1997', position: 'Defensor' },
+      'BRA-7': { height: '1.84 m', weight: '78 kg', birth: '15/07/1991', position: 'Defensor Titular' },
+      'BRA-8': { height: '1.80 m', weight: '72 kg', birth: '06/09/2003', position: 'Defensor' },
+      'BRA-9': { height: '1.80 m', weight: '72 kg', birth: '27/08/1997', position: 'Mediocampista Titular' },
+      'BRA-10': { height: '1.85 m', weight: '84 kg', birth: '23/02/1992', position: 'Mediocampista Estrella' },
+      'BRA-11': { height: '1.82 m', weight: '74 kg', birth: '16/11/1997', position: 'Mediocampista Titular' },
+      'BRA-12': { height: '1.82 m', weight: '77 kg', birth: '02/01/2001', position: 'Mediocampista' },
+      'BRA-13': { height: '-', weight: '-', birth: 'Mundial 2026', position: 'Plantel Oficial' },
+      'BRA-14': { height: '1.76 m', weight: '73 kg', birth: '12/07/2000', position: 'Delantero Leyenda' },
+      'BRA-15': { height: '1.74 m', weight: '64 kg', birth: '09/01/2001', position: 'Delantero Titular' },
+      'BRA-16': { height: '1.82 m', weight: '77 kg', birth: '26/09/2001', position: 'Delantero' },
+      'BRA-17': { height: '1.84 m', weight: '76 kg', birth: '27/05/1999', position: 'Delantero' },
+      'BRA-18': { height: '1.78 m', weight: '75 kg', birth: '18/06/2001', position: 'Delantero' },
+      'BRA-19': { height: '1.76 m', weight: '68 kg', birth: '14/12/1996', position: 'Delantero Titular' },
+      'BRA-20': { height: '1.76 m', weight: '65 kg', birth: '24/04/2007', position: 'Delantero Titular' }
     };
     return defaults[stickerId] || { height: '1.80 m', weight: '75 kg', birth: '15/05/1999', position: 'Jugador Oficial' };
   };
