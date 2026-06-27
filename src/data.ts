@@ -60,14 +60,25 @@ export const STAR_PLAYERS: Record<string, Record<number, string>> = {
     20: 'Estêvão'
   },
   FRA: {
+    1: 'Escudo Francia ⭐',
     2: 'Mike Maignan',
     3: 'Théo Hernandez',
     4: 'William Saliba',
     5: 'Jules Koundé',
+    6: 'Ibrahima Konaté',
+    7: 'Dayot Upamecano',
+    8: 'Lucas Digne',
     9: 'Aurélien Tchouaméni',
     10: 'Eduardo Camavinga',
+    11: 'Manu Koné',
+    12: 'Adrien Rabiot',
+    13: 'Plantel Francia 📸',
     14: 'Michael Olise',
     15: 'Ousmane Dembélé',
+    16: 'Bradley Barcola',
+    17: 'Désiré Doué',
+    18: 'Kingsley Coman',
+    19: 'Hugo Ekitike',
     20: 'Kylian Mbappé ⭐'
   },
   ESP: {

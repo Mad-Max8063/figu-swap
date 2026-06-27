@@ -41,7 +41,7 @@ export default function InventoryView({
       // Brasil
       'BRA-1', 'BRA-2', 'BRA-3', 'BRA-4', 'BRA-5', 'BRA-6', 'BRA-7', 'BRA-8', 'BRA-9', 'BRA-10', 'BRA-11', 'BRA-12', 'BRA-13', 'BRA-14', 'BRA-15', 'BRA-16', 'BRA-17', 'BRA-18', 'BRA-19', 'BRA-20',
       // Francia
-      'FRA-20',
+      'FRA-1', 'FRA-2', 'FRA-3', 'FRA-4', 'FRA-5', 'FRA-6', 'FRA-7', 'FRA-20',
       // España
       'ESP-15', 'ESP-11',
       // Alemania
@@ -113,7 +113,28 @@ export default function InventoryView({
       'BRA-17': { height: '1.84 m', weight: '76 kg', birth: '27/05/1999', position: 'Delantero' },
       'BRA-18': { height: '1.78 m', weight: '75 kg', birth: '18/06/2001', position: 'Delantero' },
       'BRA-19': { height: '1.76 m', weight: '68 kg', birth: '14/12/1996', position: 'Delantero Titular' },
-      'BRA-20': { height: '1.76 m', weight: '65 kg', birth: '24/04/2007', position: 'Delantero Titular' }
+      'BRA-20': { height: '1.76 m', weight: '65 kg', birth: '24/04/2007', position: 'Delantero Titular' },
+      // Francia
+      'FRA-1': { height: '-', weight: '-', birth: '07/04/1919', position: 'Escudo Oficial' },
+      'FRA-2': { height: '1.91 m', weight: '89 kg', birth: '03/07/1995', position: 'Portero Titular' },
+      'FRA-3': { height: '1.84 m', weight: '81 kg', birth: '06/10/1997', position: 'Defensor Titular' },
+      'FRA-4': { height: '1.92 m', weight: '92 kg', birth: '24/03/2001', position: 'Defensor Titular' },
+      'FRA-5': { height: '1.80 m', weight: '75 kg', birth: '12/11/1998', position: 'Defensor Titular' },
+      'FRA-6': { height: '1.94 m', weight: '95 kg', birth: '25/05/1999', position: 'Defensor' },
+      'FRA-7': { height: '1.86 m', weight: '90 kg', birth: '27/10/1998', position: 'Defensor' },
+      'FRA-8': { height: '1.78 m', weight: '74 kg', birth: '20/07/1993', position: 'Defensor' },
+      'FRA-9': { height: '1.88 m', weight: '81 kg', birth: '27/01/2000', position: 'Mediocampista Titular' },
+      'FRA-10': { height: '1.82 m', weight: '77 kg', birth: '10/11/2002', position: 'Mediocampista Titular' },
+      'FRA-11': { height: '1.85 m', weight: '80 kg', birth: '17/05/2001', position: 'Mediocampista' },
+      'FRA-12': { height: '1.88 m', weight: '72 kg', birth: '03/04/1995', position: 'Mediocampista' },
+      'FRA-13': { height: '-', weight: '-', birth: 'Mundial 2026', position: 'Plantel Oficial' },
+      'FRA-14': { height: '1.84 m', weight: '73 kg', birth: '12/12/2001', position: 'Mediocampista Titular' },
+      'FRA-15': { height: '1.78 m', weight: '67 kg', birth: '15/05/1997', position: 'Delantero Titular' },
+      'FRA-16': { height: '1.86 m', weight: '76 kg', birth: '02/09/2002', position: 'Delantero' },
+      'FRA-17': { height: '1.81 m', weight: '79 kg', birth: '03/06/2005', position: 'Delantero' },
+      'FRA-18': { height: '1.80 m', weight: '76 kg', birth: '13/06/1996', position: 'Delantero' },
+      'FRA-19': { height: '1.89 m', weight: '74 kg', birth: '20/06/2002', position: 'Delantero' },
+      'FRA-20': { height: '1.78 m', weight: '73 kg', birth: '20/12/1998', position: 'Delantero Leyenda' }
     };
     return defaults[stickerId] || { height: '1.80 m', weight: '75 kg', birth: '15/05/1999', position: 'Jugador Oficial' };
   };
