@@ -11,6 +11,7 @@ interface ChatRoomViewProps {
   onSendMessage: (roomId: string, message: ChatMessage) => void;
   onCompleteSwap: (otherUid: string, giveStickers: string[], takeStickers: string[]) => void;
   onAddReviewToUser: (otherUid: string, rating: number, comment: string) => void;
+  match?: SwapMatch;
 }
 
 export default function ChatRoomView({
@@ -20,7 +21,8 @@ export default function ChatRoomView({
   onBack,
   onSendMessage,
   onCompleteSwap,
-  onAddReviewToUser
+  onAddReviewToUser,
+  match
 }: ChatRoomViewProps) {
   const [inputText, setInputText] = useState('');
   const [checkingAi, setCheckingAi] = useState(false);
@@ -118,8 +120,8 @@ export default function ChatRoomView({
       
       // Stickers exchange arrays
       // Give duplicates we carry, take their duplicates
-      const give = ['ARG-10', 'CC-10'];
-      const take = ['GER-10', 'FRA-10'];
+      const give = match?.stickersIProvide || ['ARG-10', 'CC-10'];
+      const take = match?.stickersTheyProvide || ['GER-10', 'FRA-10'];
 
       // Physically execute inventory shifts
       onCompleteSwap(room.otherUser.uid, give, take);
@@ -208,6 +210,20 @@ export default function ChatRoomView({
             <p className="text-[10px] text-neutral-300 leading-relaxed bg-neutral-950 p-2.5 rounded-lg border border-neutral-850">
               Cuando se encuentren físicamente en el punto seguro de <b>{currentUser.city}</b>, muestren y escaneen el código para sincronizar automáticamente sus colecciones pegadas y duplicadas.
             </p>
+
+            {match && (
+              <div className="bg-neutral-950 p-3 rounded-xl border border-neutral-850 text-left space-y-1.5 shadow-inner">
+                <span className="text-[9px] font-bold uppercase text-emerald-400 tracking-wider block text-center">Intercambio de figuritas acordado:</span>
+                <div className="text-[10px] text-neutral-300 flex justify-between gap-2 border-t border-neutral-900 pt-1.5">
+                  <span>Tú entregas:</span>
+                  <span className="font-mono font-bold text-amber-300">{match.stickersIProvide.join(', ')}</span>
+                </div>
+                <div className="text-[10px] text-neutral-300 flex justify-between gap-2">
+                  <span>Tú recibes:</span>
+                  <span className="font-mono font-bold text-emerald-300">{match.stickersTheyProvide.join(', ')}</span>
+                </div>
+              </div>
+            )}
 
             {/* Switchable Side Generator or scanner simulator */}
             {!showRatingScreen ? (

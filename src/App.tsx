@@ -1017,15 +1017,21 @@ export default function App() {
       {/* Main Core Router Panels */}
       <main className="flex-1 max-w-md mx-auto sm:max-w-xl md:max-w-2xl w-full px-4 pt-3 pb-24 overflow-y-auto overflow-x-hidden">
         {openedRoomId && activeTab === 'chats' && openedRoom ? (
-          <ChatRoomView
-            room={openedRoom}
-            currentUser={currentUser}
-            stickerStates={stickerStates}
-            onBack={() => setOpenedRoomId(null)}
-            onSendMessage={handleSendMessage}
-            onCompleteSwap={handleCompleteSwap}
-            onAddReviewToUser={handleAddReviewToUser}
-          />
+          (() => {
+            const openedRoomMatch = activeMatches.find(m => m.id === openedRoom.matchId) || activeMatches.find(m => m.otherUser.uid === openedRoom.otherUser.uid);
+            return (
+              <ChatRoomView
+                room={openedRoom}
+                currentUser={currentUser}
+                stickerStates={stickerStates}
+                onBack={() => setOpenedRoomId(null)}
+                onSendMessage={handleSendMessage}
+                onCompleteSwap={handleCompleteSwap}
+                onAddReviewToUser={handleAddReviewToUser}
+                match={openedRoomMatch}
+              />
+            );
+          })()
         ) : (
 
           <div className="animate-fade-in space-y-4">

@@ -41,7 +41,7 @@ export default function InventoryView({
       // Brasil
       'BRA-1', 'BRA-2', 'BRA-3', 'BRA-4', 'BRA-5', 'BRA-6', 'BRA-7', 'BRA-8', 'BRA-9', 'BRA-10', 'BRA-11', 'BRA-12', 'BRA-13', 'BRA-14', 'BRA-15', 'BRA-16', 'BRA-17', 'BRA-18', 'BRA-19', 'BRA-20',
       // Francia
-      'FRA-1', 'FRA-2', 'FRA-3', 'FRA-4', 'FRA-5', 'FRA-6', 'FRA-7', 'FRA-20',
+      'FRA-1', 'FRA-2', 'FRA-3', 'FRA-4', 'FRA-5', 'FRA-6', 'FRA-7', 'FRA-8', 'FRA-9', 'FRA-10', 'FRA-11', 'FRA-12', 'FRA-13', 'FRA-14', 'FRA-15', 'FRA-16', 'FRA-17', 'FRA-18', 'FRA-19', 'FRA-20',
       // España
       'ESP-15', 'ESP-11',
       // Alemania

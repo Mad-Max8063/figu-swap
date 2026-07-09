@@ -122,13 +122,13 @@ Identify sticker numbers and codes present in the sheet or document, and determi
 
 CROSS-REFERENCE WITH REAL PANINI WORLD CUP ALBUM ROSTER:
 - Use your deep knowledge of the official Panini FIFA World Cup (United 2026) to map any player names, team names, or emblems detected on the sheet to our specific select database IDs:
-  * Argentina: Dibu Martínez (ARG-1), Nahuel Molina (ARG-2), Cuti Romero (ARG-3), Otamendi (ARG-4), Tagliafico (ARG-5), Enzo Fernández (ARG-8), Lionel Messi (ARG-10), Alexis Mac Allister (ARG-11), Julián Álvarez (ARG-9), De Paul (ARG-16), Lautaro Martínez (ARG-20).
-  * Brasil: Alisson (BRA-1), Neymar Jr (BRA-10), Vinícius Jr (BRA-7), Richarlison (BRA-9), Raphinha (BRA-11), Casemiro (BRA-5).
-  * Francia: Maignan (FRA-1), Mbappé (FRA-10), Griezmann (FRA-7), Giroud (FRA-9), Dembélé (FRA-11), Tchouaméni (FRA-8).
-  * España: Unai Simón (ESP-1), Dani Olmo (ESP-10), Morata (ESP-9), Gavi (ESP-6), Pedri (ESP-8), Lamine Yamal (ESP-17).
-  * Alemania: Manuel Neuer (GER-1), Jamal Musiala (GER-10), Florian Wirtz (GER-17), Füllkrug (GER-9), Kai Havertz (GER-7).
-  * Uruguay: Sergio Rochet (URU-1), Darwin Núñez (URU-9), Federico Valverde (URU-15), De Arrascaeta (URU-10).
-  * Coca-Cola: World Cup Trophy (CC-1), Mascot (CC-2), Argentina Emblem (CC-3), Brazil Emblem (CC-4), France Emblem (CC-5), Legend Messi (CC-10), Final Stadium (CC-14).
+  * Argentina: Emiliano Martínez (ARG-2), Nahuel Molina (ARG-3), Cristian Romero (ARG-4), Nicolás Otamendi (ARG-5), Nicolás Tagliafico (ARG-6), Enzo Fernández (ARG-8), Alexis Mac Allister (ARG-9), Rodrigo De Paul (ARG-10), Lionel Messi (ARG-17), Lautaro Martínez (ARG-18), Julián Álvarez (ARG-19).
+  * Brasil: Alisson Becker (BRA-2), Marquinhos (BRA-4), Éder Militão (BRA-5), Danilo (BRA-7), Casemiro (BRA-10), Bruno Guimarães (BRA-11), Vinícius Jr (BRA-14), Rodrygo (BRA-15), Raphinha (BRA-19).
+  * Francia: Mike Maignan (FRA-2), Théo Hernandez (FRA-3), William Saliba (FRA-4), Jules Koundé (FRA-5), Ibrahima Konaté (FRA-6), Dayot Upamecano (FRA-7), Lucas Digne (FRA-8), Aurélien Tchouaméni (FRA-9), Eduardo Camavinga (FRA-10), Ousmane Dembélé (FRA-15), Bradley Barcola (FRA-16), Kylian Mbappé (FRA-20).
+  * España: Unai Simón (ESP-2), Robin Le Normand (ESP-3), Aymeric Laporte (ESP-4), Marc Cucurella (ESP-8), Rodri (ESP-10), Pedri (ESP-11), Lamine Yamal (ESP-15), Dani Olmo (ESP-16), Nico Williams (ESP-17), Álvaro Morata (ESP-19).
+  * Alemania: Marc-André ter Stegen (GER-2), Jonathan Tah (GER-3), Antonio Rüdiger (GER-6), Joshua Kimmich (GER-10), Florian Wirtz (GER-11), Jamal Musiala (GER-15), Kai Havertz (GER-17), Leroy Sané (GER-18).
+  * Uruguay: Sergio Rochet (URU-2), Ronald Araujo (URU-4), José María Giménez (URU-5), Federico Valverde (URU-10), Giorgian De Arrascaeta (URU-11), Nicolás de la Cruz (URU-15), Darwin Núñez (URU-17).
+  * Coca-Cola: Trofeo Copa del Mundo (CC-1), Mascota Oficial (CC-2), Emblema Argentina (CC-3), Emblema Brasil (CC-4), Emblema Francia (CC-5), Leyenda Lionel Messi (CC-10), Estadio Final (CC-14).
 - If a player name is recognized, map it to the corresponding code above.
 - If a sticker code or player from a non-supported country is detected (e.g. QAT, ECU, SEN, NED, ENG, USA, WAL, KSA, POL, DEN, tun, bel, can, mar, cro, srb, sui, cmr, por, gha, kor), ignore it or map it to supported ones so that the output contains only the supported teams (ARG, BRA, FRA, ESP, GER, URU, MEX, MAR, JPN, FWC, CC).
 
