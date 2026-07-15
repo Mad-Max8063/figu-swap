@@ -43,7 +43,7 @@ export default function InventoryView({
       // Francia
       'FRA-1', 'FRA-2', 'FRA-3', 'FRA-4', 'FRA-5', 'FRA-6', 'FRA-7', 'FRA-8', 'FRA-9', 'FRA-10', 'FRA-11', 'FRA-12', 'FRA-13', 'FRA-14', 'FRA-15', 'FRA-16', 'FRA-17', 'FRA-18', 'FRA-19', 'FRA-20',
       // España
-      'ESP-15', 'ESP-11',
+      'ESP-1', 'ESP-2', 'ESP-3', 'ESP-4', 'ESP-5', 'ESP-6', 'ESP-7', 'ESP-8', 'ESP-9', 'ESP-10', 'ESP-11', 'ESP-12', 'ESP-13', 'ESP-14', 'ESP-15', 'ESP-16', 'ESP-17', 'ESP-18', 'ESP-19',
       // Alemania
       'GER-15', 'GER-11',
       // Uruguay
